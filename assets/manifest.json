@@ -1,0 +1,34 @@
+{
+  "author": "Pegenau GmbH & Co. KG",
+  "background": {
+    "scripts": [
+      "chrome/background.js"
+    ]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "projektxd@pegenau.de",
+      "strict_max_version": "115.*",
+      "strict_min_version": "115.0"
+    }
+  },
+  "default_locale": "de",
+  "description": "__MSG_extensionDescription__",
+  "icons": {
+    "64": "chrome/content/images/projektxd.png"
+  },
+  "manifest_version": 2,
+  "browser_action": {
+    "default_title": "__MSG_extensionName__",
+    "default_icon": "chrome/content/images/projektxd.png"
+  },
+  "name": "__MSG_extensionName__",
+  "options_ui": {
+    "browser_style": false,
+    "open_in_tab": true,
+    "page": "chrome/content/ui/options.html"
+  },
+  "permissions": [
+  ],
+  "version": "1.0"
+}

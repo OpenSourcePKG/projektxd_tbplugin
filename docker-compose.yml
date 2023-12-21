@@ -1,0 +1,20 @@
+version: '3.1'
+
+services:
+  thunderbird:
+    image: thunderbird_projektxd_addon_115_3_2
+    build:
+      context: ./thunderbird/
+      dockerfile: Dockerfile
+    container_name: thunderbird_projektxd_addon
+    volumes:
+      - thunderbirddata:/data
+      - ./built/ProjektXD-1.0.xpi:/data/ProjektXD.xpi
+      - ./dist/:/data/projektxd
+      #- ./dist:/data/.thunderbird/Og3joltt.default/extensions/findnow@pegenau.de/
+    ports:
+      - "127.0.0.1:8080:8080"
+
+volumes:
+  thunderbirddata:
+    driver: local

@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "outDir": "../dist/chrome",
+    "types": [
+      "node",
+    ],
+    "typeRoots": [
+      "../node_modules/@types",
+      "../node_modules/mozilla-webext-types"
+    ],
+    "target": "es2019",
+    "module": "esnext",
+    "sourceMap": false,
+    "allowJs": true,
+    "rootDir": ".",
+    "strict": true,
+    "noImplicitAny": false,
+    "noImplicitReturns": false,
+    "noUnusedLocals": false,
+    "removeComments": false,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true
+  },
+  "include": [
+    "./**/*"
+  ],
+}
