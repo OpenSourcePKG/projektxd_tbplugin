@@ -4,5 +4,68 @@
   },
   "extensionName": {
     "message": "ProjektXD"
+  },
+  "optionsHeadingCommon": {
+    "message": "ProjektXD Settings"
+  },
+  "optionsSubtitle": {
+    "message": "Configure access to your ProjektXD instance"
+  },
+  "optionsSectionConnection": {
+    "message": "Connection"
+  },
+  "optionsSectionConnectionHelp": {
+    "message": "Where is your ProjektXD instance reachable?"
+  },
+  "optionsSectionCredentials": {
+    "message": "Credentials"
+  },
+  "optionsSectionCredentialsHelp": {
+    "message": "Stored locally inside the profile."
+  },
+  "optionsURL": {
+    "message": "URL"
+  },
+  "optionsURLHelp": {
+    "message": "Full address including protocol, e.g. https://portal.example.com/projekte/"
+  },
+  "optionsUsername": {
+    "message": "Username"
+  },
+  "optionsPassword": {
+    "message": "Password"
+  },
+  "optionsShowPassword": {
+    "message": "Show password"
+  },
+  "optionsAutoLogin": {
+    "message": "Sign in automatically"
+  },
+  "optionsAutoLoginHelp": {
+    "message": "Use the stored credentials when opening the tab."
+  },
+  "optionsSaved": {
+    "message": "Saved"
+  },
+  "optionsPermissionTitle": {
+    "message": "Permission missing"
+  },
+  "optionsPermissionHelp": {
+    "message": "To sign in automatically, the add-on needs one-time access to the ProjektXD URL."
+  },
+  "optionsPermissionGrant": {
+    "message": "Activate"
+  },
+  "optionsPermissionOk": {
+    "message": "Access granted"
+  },
+  "optionsPermissionMissing": {
+    "message": "Access required – activate now"
+  },
+  "toastInvalidUrlTitle": {
+    "message": "Invalid URL"
+  },
+  "toastInvalidUrlBody": {
+    "message": "Please enter the full address including https://."
   }
 }

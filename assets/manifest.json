@@ -8,8 +8,8 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "projektxd@pegenau.de",
-      "strict_max_version": "115.*",
-      "strict_min_version": "115.0"
+      "strict_max_version": "140.*",
+      "strict_min_version": "140.0"
     }
   },
   "default_locale": "de",
@@ -17,8 +17,8 @@
   "icons": {
     "64": "chrome/content/images/projektxd.png"
   },
-  "manifest_version": 2,
-  "browser_action": {
+  "manifest_version": 3,
+  "action": {
     "default_title": "__MSG_extensionName__",
     "default_icon": "chrome/content/images/projektxd.png"
   },
@@ -29,6 +29,13 @@
     "page": "chrome/content/ui/options.html"
   },
   "permissions": [
+    "tabs",
+    "storage",
+    "activeTab",
+    "scripting"
   ],
-  "version": "1.0"
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "version": "2.0.0"
 }

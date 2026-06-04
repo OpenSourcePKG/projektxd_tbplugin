@@ -22,8 +22,8 @@ module.exports = [
         mode: mode,
         entry: {
             'background': `./src/chrome/background.ts`,
-            //'content/ui/editsubject': `./src/chrome/content/ui/editsubject.ts`,
             'content/ui/options': './src/chrome/content/ui/options.ts',
+            'content/scripts/login': './src/chrome/content/scripts/login.ts',
         },
         experiments: {
             syncWebAssembly: true,

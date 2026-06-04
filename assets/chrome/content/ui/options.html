@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="chrome://global/skin/in-content/common.css"/>
+  <link rel="stylesheet" href="options.css"/>
+  <script type="text/javascript" defer="defer" src="options.js"></script>
+  <title data-i18n="optionsHeadingCommon"></title>
+</head>
+<body>
+<div class="page">
+  <header class="page-header">
+    <img class="page-logo" src="../images/projektxd.png" alt="">
+    <div class="page-header-text">
+      <h1 class="page-title" data-i18n="optionsHeadingCommon"></h1>
+      <p class="page-subtitle" data-i18n="optionsSubtitle"></p>
+    </div>
+    <div class="save-indicator" id="save-indicator" aria-live="polite">
+      <span class="save-indicator-dot"></span>
+      <span data-i18n="optionsSaved"></span>
+    </div>
+  </header>
+
+  <main class="page-main">
+    <section class="card">
+      <header class="card-header">
+        <h2 class="card-title" data-i18n="optionsSectionConnection"></h2>
+        <p class="card-help" data-i18n="optionsSectionConnectionHelp"></p>
+      </header>
+
+      <div class="field">
+        <label class="field-label" for="url" data-i18n="optionsURL"></label>
+        <div class="field-input-group">
+          <input class="field-input" type="url" id="url" placeholder="https://portal.example.com/projekte/" autocomplete="off" spellcheck="false">
+          <button type="button" class="btn btn-primary" id="permission-grant" data-i18n="optionsPermissionGrant"></button>
+        </div>
+        <p class="field-status" id="permission-status">
+          <span class="status status-warning" data-status="missing" hidden>
+            <span class="status-dot"></span>
+            <span data-i18n="optionsPermissionMissing"></span>
+          </span>
+          <span class="status status-ok" data-status="ok" hidden>
+            <span class="status-dot"></span>
+            <span data-i18n="optionsPermissionOk"></span>
+          </span>
+        </p>
+        <p class="field-help" data-i18n="optionsURLHelp"></p>
+      </div>
+    </section>
+
+    <section class="card">
+      <header class="card-header">
+        <h2 class="card-title" data-i18n="optionsSectionCredentials"></h2>
+        <p class="card-help" data-i18n="optionsSectionCredentialsHelp"></p>
+      </header>
+
+      <div class="field">
+        <label class="field-label" for="username" data-i18n="optionsUsername"></label>
+        <input class="field-input" type="text" id="username" autocomplete="username" spellcheck="false">
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="password" data-i18n="optionsPassword"></label>
+        <div class="field-input-group">
+          <input class="field-input" type="password" id="password" autocomplete="current-password" placeholder="••••••••">
+          <button type="button" class="field-input-button" id="toggle-password" data-i18n="optionsShowPassword" data-i18n-target="title" aria-label="show password">
+            <svg class="icon icon-eye" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 5C6 5 2 12 2 12s4 7 10 7 10-7 10-7-4-7-10-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-3a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+            </svg>
+            <svg class="icon icon-eye-off" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2 4.27 3.28 3l17.73 17.73L19.73 22l-3.05-3.05A11.7 11.7 0 0 1 12 19c-6 0-10-7-10-7a17.7 17.7 0 0 1 4.1-4.84L2 4.27zM12 7a5 5 0 0 1 5 5c0 .53-.08 1.03-.23 1.5l-2.1-2.1a3 3 0 0 0-2.07-2.07L10.5 7.23A5 5 0 0 1 12 7zm0-2c6 0 10 7 10 7a17.8 17.8 0 0 1-2.65 3.43l-3.7-3.7A3 3 0 0 0 12 9c-.4 0-.79.08-1.14.23L8.55 6.92A11.7 11.7 0 0 1 12 5z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="field field-toggle">
+        <label class="toggle">
+          <span class="toggle-control">
+            <input type="checkbox" id="autologin" class="toggle-input">
+            <span class="toggle-track" aria-hidden="true">
+              <span class="toggle-thumb"></span>
+            </span>
+          </span>
+          <span class="toggle-text">
+            <span class="toggle-title" data-i18n="optionsAutoLogin"></span>
+            <span class="toggle-help" data-i18n="optionsAutoLoginHelp"></span>
+          </span>
+        </label>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="false"></div>
+</body>
+</html>

@@ -2,7 +2,7 @@ version: '3.1'
 
 services:
   thunderbird:
-    image: thunderbird_projektxd_addon_115_3_2
+    image: thunderbird_projektxd_addon_140_11_1esr
     build:
       context: ./thunderbird/
       dockerfile: Dockerfile
@@ -17,4 +17,5 @@ services:
 
 volumes:
   thunderbirddata:
-    driver: local
+    external: true
+    name: findnow_tbplugin_thunderbirddata

@@ -4,5 +4,68 @@
   },
   "extensionName": {
     "message": "ProjektXD"
+  },
+  "optionsHeadingCommon": {
+    "message": "ProjektXD Einstellungen"
+  },
+  "optionsSubtitle": {
+    "message": "Zugang zu deiner ProjektXD-Instanz konfigurieren"
+  },
+  "optionsSectionConnection": {
+    "message": "Verbindung"
+  },
+  "optionsSectionConnectionHelp": {
+    "message": "Wo ist deine ProjektXD-Instanz erreichbar?"
+  },
+  "optionsSectionCredentials": {
+    "message": "Anmeldedaten"
+  },
+  "optionsSectionCredentialsHelp": {
+    "message": "Werden lokal verschlüsselt im Profil gespeichert."
+  },
+  "optionsURL": {
+    "message": "URL"
+  },
+  "optionsURLHelp": {
+    "message": "Vollständige Adresse inklusive Protokoll, z. B. https://portal.example.com/projekte/"
+  },
+  "optionsUsername": {
+    "message": "Benutzer"
+  },
+  "optionsPassword": {
+    "message": "Passwort"
+  },
+  "optionsShowPassword": {
+    "message": "Passwort anzeigen"
+  },
+  "optionsAutoLogin": {
+    "message": "Automatisch anmelden"
+  },
+  "optionsAutoLoginHelp": {
+    "message": "Beim Öffnen direkt mit den hinterlegten Daten einloggen."
+  },
+  "optionsSaved": {
+    "message": "Gespeichert"
+  },
+  "optionsPermissionTitle": {
+    "message": "Berechtigung fehlt"
+  },
+  "optionsPermissionHelp": {
+    "message": "Damit sich das Add-on automatisch anmelden kann, muss der Zugriff auf die ProjektXD-URL einmal erteilt werden."
+  },
+  "optionsPermissionGrant": {
+    "message": "Aktivieren"
+  },
+  "optionsPermissionOk": {
+    "message": "Zugriff erteilt"
+  },
+  "optionsPermissionMissing": {
+    "message": "Zugriff fehlt – jetzt aktivieren"
+  },
+  "toastInvalidUrlTitle": {
+    "message": "Ungültige URL"
+  },
+  "toastInvalidUrlBody": {
+    "message": "Bitte die vollständige Adresse inkl. https:// eintragen."
   }
 }
