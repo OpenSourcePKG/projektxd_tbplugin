@@ -23,6 +23,10 @@
     "default_icon": "chrome/content/images/projektxd.png",
     "allowed_spaces": []
   },
+  "message_display_action": {
+    "default_title": "__MSG_messageActionTitle__",
+    "default_icon": "chrome/content/images/projektxd.png"
+  },
   "name": "__MSG_extensionName__",
   "options_ui": {
     "browser_style": false,
@@ -33,7 +37,12 @@
     "tabs",
     "storage",
     "activeTab",
-    "scripting"
+    "scripting",
+    "messagesRead",
+    "messagesImport",
+    "accountsRead",
+    "compose",
+    "notifications"
   ],
   "host_permissions": [
     "<all_urls>"

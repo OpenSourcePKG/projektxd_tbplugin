@@ -24,6 +24,7 @@ module.exports = [
             'background': `./src/chrome/background.ts`,
             'content/ui/options': './src/chrome/content/ui/options.ts',
             'content/scripts/login': './src/chrome/content/scripts/login.ts',
+            'content/scripts/api': './src/chrome/content/scripts/api.ts',
         },
         experiments: {
             syncWebAssembly: true,

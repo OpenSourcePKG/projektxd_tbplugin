@@ -67,5 +67,20 @@
   },
   "toastInvalidUrlBody": {
     "message": "Bitte die vollständige Adresse inkl. https:// eintragen."
+  },
+  "messageActionTitle": {
+    "message": "Als projektXD-Ticket"
+  },
+  "notifyNoUrlTitle": {
+    "message": "projektXD nicht konfiguriert"
+  },
+  "notifyNoUrlBody": {
+    "message": "Bitte zuerst die projektXD-URL in den Add-on-Einstellungen hinterlegen."
+  },
+  "notifyLoginRequiredTitle": {
+    "message": "Nicht bei projektXD angemeldet"
+  },
+  "notifyLoginRequiredBody": {
+    "message": "Bitte in projektXD anmelden und es erneut versuchen."
   }
 }

@@ -67,5 +67,20 @@
   },
   "toastInvalidUrlBody": {
     "message": "Please enter the full address including https://."
+  },
+  "messageActionTitle": {
+    "message": "Create projektXD ticket"
+  },
+  "notifyNoUrlTitle": {
+    "message": "projektXD not configured"
+  },
+  "notifyNoUrlBody": {
+    "message": "Please set the projektXD URL in the add-on settings first."
+  },
+  "notifyLoginRequiredTitle": {
+    "message": "Not signed in to projektXD"
+  },
+  "notifyLoginRequiredBody": {
+    "message": "Please sign in to projektXD and try again."
   }
 }
