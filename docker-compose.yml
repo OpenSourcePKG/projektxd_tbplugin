@@ -9,7 +9,9 @@ services:
     container_name: thunderbird_projektxd_addon
     volumes:
       - thunderbirddata:/data
-      - ./built/ProjektXD-1.0.xpi:/data/ProjektXD.xpi
+      # Packaged-xpi mount disabled: the referenced file does not exist and the
+      # unpacked add-on is loaded from /data/projektxd via about:debugging instead.
+      #- ./built/ProjektXD-1.0.xpi:/data/ProjektXD.xpi
       - ./dist/:/data/projektxd
       #- ./dist:/data/.thunderbird/Og3joltt.default/extensions/findnow@pegenau.de/
     ports:
