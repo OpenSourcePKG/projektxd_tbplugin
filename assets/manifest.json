@@ -20,7 +20,8 @@
   "manifest_version": 3,
   "action": {
     "default_title": "__MSG_extensionName__",
-    "default_icon": "chrome/content/images/projektxd.png"
+    "default_icon": "chrome/content/images/projektxd.png",
+    "allowed_spaces": []
   },
   "name": "__MSG_extensionName__",
   "options_ui": {
