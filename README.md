@@ -1,28 +1,28 @@
 <p align="center">
 
-<img src="./assets/chrome/content/images/projektxd.png" width="96" alt="ProjektXD logo">
+<img src="./assets/chrome/content/images/projektxd.png" width="96" alt="projektXD logo">
 </p>
 
-<h1 align="center">ProjektXD Thunderbird Add-on</h1>
+<h1 align="center">projektXD Thunderbird Add-on</h1>
 
 <p align="center">
-  Open your ProjektXD instance from inside Thunderbird — and sign in automatically.
+  Open your projektXD instance from inside Thunderbird — and sign in automatically.
 </p>
 
 ---
 
-## About ProjektXD
+## About projektXD
 
-[**ProjektXD**](https://www.pegenau.de/on-premise-produkte/projektmanagement/) is an on-premise project management solution from Pegenau, aimed at small and mid-sized organisations. It bundles Kanban-style task boards, an integrated ticket system, configurable project templates and real-time dashboards into one self-hosted application — and ships with a mobile app that keeps working offline (handy on construction sites or in the field).
+[**projektXD**](https://www.pegenau.de/on-premise-produkte/projektmanagement/) is an on-premise project management solution from Pegenau, aimed at small and mid-sized organisations. It bundles Kanban-style task boards, an integrated ticket system, configurable project templates and real-time dashboards into one self-hosted application — and ships with a mobile app that keeps working offline (handy on construction sites or in the field).
 
 ### Why combine it with this add-on?
 
-ProjektXD lives in the browser, your team probably lives in Thunderbird. Without this add-on the daily workflow looks like *"open browser → find the ProjektXD tab → re-authenticate after the session expired → switch back to Thunderbird"*. The add-on closes that loop:
+projektXD lives in the browser, your team probably lives in Thunderbird. Without this add-on the daily workflow looks like *"open browser → find the projektXD tab → re-authenticate after the session expired → switch back to Thunderbird"*. The add-on closes that loop:
 
 - **One-click access** straight from the Thunderbird toolbar — no second browser window to juggle.
-- **Silent re-auth** when your ProjektXD session has timed out: the add-on calls the login endpoint with your stored credentials and reloads the tab, so you land on the page you wanted.
+- **Silent re-auth** when your projektXD session has timed out: the add-on calls the login endpoint with your stored credentials and reloads the tab, so you land on the page you wanted.
 - **Tab re-use** instead of opening a new tab every time you click.
-- **No server-side changes** required on the ProjektXD instance — the add-on works against the standard backend endpoints.
+- **No server-side changes** required on the projektXD instance — the add-on works against the standard backend endpoints.
 
 ## Requirements
 
@@ -41,7 +41,7 @@ Step-by-step install & configuration instructions:
 Clicking the toolbar icon triggers the background script (`src/chrome/background.ts`):
 
 1. Loads the saved settings.
-2. Finds an existing tab whose URL matches the configured ProjektXD origin; otherwise opens a new tab.
+2. Finds an existing tab whose URL matches the configured projektXD origin; otherwise opens a new tab.
 3. Waits for `tabs.onUpdated` with `status === 'complete'` **and** the URL actually matching the target (so the script never fires on `about:blank`).
 4. If *auto-login* is enabled:
    - Injects `chrome/content/scripts/login.js` via `scripting.executeScript`.
@@ -75,7 +75,7 @@ npx grunt
 produces:
 
 - `dist/` — the unpacked extension, ready for temporary loading via `about:debugging`
-- `built/ProjektXD-<version>.xpi` — installable package
+- `built/projektXD-<version>.xpi` — installable package
 
 ### Type-check
 
@@ -108,9 +108,9 @@ src/chrome/
     scripts/login.ts           content script: init check, login, reload
     ui/options.ts              options dialog logic
   inc/
-    Api/ProjektXDApi.ts        fetch wrapper for /backend/main/{Init,Login}
+    Api/projektXDApi.ts        fetch wrapper for /backend/main/{Init,Login}
     Settings.ts                browser.storage.local wrapper
-    Types/ProjektXDOptions.ts  settings type
+    Types/projektXDOptions.ts  settings type
     Utils/{Toast,Translation,JoinUrl,Debug}.ts
 doc/                           user guides (EN/DE)
 thunderbird/                   docker setup for local testing

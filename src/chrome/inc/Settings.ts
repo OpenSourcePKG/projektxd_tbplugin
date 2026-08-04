@@ -1,4 +1,4 @@
-import {ProjektXDOptions} from './Types/ProjektXDOptions';
+import {ProjektXDOptions} from './Types/projektXDOptions';
 import {ThunderbirdBrowser} from 'mozilla-webext-types';
 
 declare const browser: ThunderbirdBrowser;

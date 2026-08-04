@@ -1,5 +1,5 @@
-import {ProjektXDApi} from '../../inc/Api/ProjektXDApi';
-import {ProjektXDOptions} from '../../inc/Types/ProjektXDOptions';
+import {ProjektXDApi} from '../../inc/Api/projektXDApi';
+import {ProjektXDOptions} from '../../inc/Types/projektXDOptions';
 import {ThunderbirdBrowser} from 'mozilla-webext-types';
 
 declare const browser: ThunderbirdBrowser;

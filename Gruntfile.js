@@ -38,7 +38,7 @@ module.exports = (grunt) => {
         compress: {
             main: {
                 options: {
-                    archive: `${outDir}/ProjektXD-${manifestJSONContent.version}.xpi`,
+                    archive: `${outDir}/projektXD-${manifestJSONContent.version}.xpi`,
                     mode: 'zip'
                 },
                 files: [
