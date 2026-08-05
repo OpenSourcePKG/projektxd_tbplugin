@@ -56,6 +56,14 @@ The content script (`src/chrome/content/scripts/login.ts`):
 
 No server-side changes are required.
 
+## Integrating with the projektXD web app
+
+The add-on injects a bridge (`window.projektxd_tb`) so the projektXD web app can
+create tickets from emails and open EMLs in Thunderbird:
+
+- 📘 [Bridge API reference](doc/browser-api.md) — the exact `window.projektxd_tb` contract.
+- 🛠️ [Integration guide](doc/projektxd-integration.md) — step-by-step for the projektXD frontend/backend.
+
 ## Development
 
 ### Install dependencies
