@@ -40,7 +40,7 @@ export class ComposeDraft {
     }
 
     /**
-     * Find the Drafts folder of the first account (recursively through subfolders).
+     * Find a Drafts folder, searching every account (default account first).
      */
     private static async findDraftsFolder(): Promise<any | null> {
         const accounts = await browser.accounts.list(true);
@@ -49,15 +49,24 @@ export class ComposeDraft {
             return null;
         }
 
-        return ComposeDraft.searchDrafts(accounts[0].folders ?? []);
+        for (const account of accounts as any[]) {
+            const roots = account.folders ?? (account.rootFolder ? [account.rootFolder] : []);
+            const found = ComposeDraft.searchDrafts(roots);
+
+            if (found) {
+                return found;
+            }
+        }
+
+        return null;
     }
 
     /**
-     * Depth-first search for a folder whose `type` is 'drafts'.
+     * Depth-first search for a Drafts folder, recursing through subfolders.
      */
     private static searchDrafts(folders: any[]): any | null {
         for (const folder of folders) {
-            if (folder.type === 'drafts') {
+            if (ComposeDraft.isDrafts(folder)) {
                 return folder;
             }
 
@@ -73,6 +82,18 @@ export class ComposeDraft {
         }
 
         return null;
+    }
+
+    /**
+     * Whether a folder is the Drafts folder. TB 121+ uses the `specialUse`
+     * array; older versions used the (now deprecated) `type` string.
+     */
+    private static isDrafts(folder: any): boolean {
+        if (Array.isArray(folder.specialUse)) {
+            return folder.specialUse.indexOf('drafts') !== -1;
+        }
+
+        return folder.type === 'drafts';
     }
 
 }
