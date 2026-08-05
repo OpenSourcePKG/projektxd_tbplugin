@@ -63,7 +63,7 @@ export interface TbEmailMeta {
     messageId: string;   // without angle brackets
 }
 
-interface ProjektxdTbBridge {
+interface ProjektXDTbBridge {
     readonly version: string;
     openCompose(eml: Blob): Promise<void>;
     registerOnEmail(cb: (eml: Blob, meta: TbEmailMeta) => void | Promise<void>): void;
@@ -71,7 +71,7 @@ interface ProjektxdTbBridge {
 }
 
 declare global {
-    interface Window { projektxd_tb?: ProjektxdTbBridge; }
+    interface Window { projektxd_tb?: ProjektXDTbBridge; }
 }
 
 export const Thunderbird = {

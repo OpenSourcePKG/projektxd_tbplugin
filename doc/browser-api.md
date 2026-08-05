@@ -76,7 +76,7 @@ type EmailMeta = {
  */
 type OnEmailCallback = (eml: Blob, meta: EmailMeta) => void | Promise<void>;
 
-interface ProjektxdTb {
+interface ProjektXDTbBridge {
     /** Version string of the bridge API. Follows SemVer. */
     readonly version: string;
 
@@ -129,7 +129,7 @@ declare global {
          * `undefined` when the page is NOT running inside Thunderbird
          * with the add-on installed.
          */
-        projektxd_tb?: ProjektxdTb;
+        projektxd_tb?: ProjektXDTbBridge;
     }
 }
 ```
