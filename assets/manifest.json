@@ -39,13 +39,10 @@
     "activeTab",
     "scripting",
     "messagesRead",
-    "messagesImport",
-    "accountsRead",
-    "compose",
     "notifications"
   ],
   "host_permissions": [
     "<all_urls>"
   ],
-  "version": "2.1.1"
+  "version": "2.2.0"
 }

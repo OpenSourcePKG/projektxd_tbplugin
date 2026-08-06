@@ -3,9 +3,9 @@ import {Debug} from './inc/Utils/Debug';
 import {ThunderbirdBrowser} from 'mozilla-webext-types';
 import {ProjektXDOptions} from './inc/Types/projektXDOptions';
 import {ProjektXDApi} from './inc/Api/projektXDApi';
-import {ComposeDraft} from './inc/Mail/ComposeDraft';
+import {DisplayEml} from './inc/Mail/DisplayEml';
 import {DisplayedEmail} from './inc/Mail/DisplayedEmail';
-import {BridgeResponse, OnEmailMsg, OpenComposeMsg} from './inc/Types/bridge';
+import {BridgeResponse, OnEmailMsg, OpenMessageMsg} from './inc/Types/bridge';
 
 declare const browser: ThunderbirdBrowser;
 
@@ -246,17 +246,18 @@ async function refreshBridge(): Promise<void> {
 }
 
 /**
- * Handle an `openCompose` request coming from the bridge content script.
+ * Handle an `openMessage` (or deprecated `openCompose`) request coming from the
+ * bridge content script: open the EML read-only, as if opened from disk.
  *
- * @param {OpenComposeMsg} msg
+ * @param {OpenMessageMsg} msg
  * @returns {Promise<BridgeResponse>}
  */
-async function handleOpenCompose(msg: OpenComposeMsg): Promise<BridgeResponse> {
+async function handleOpenMessage(msg: OpenMessageMsg): Promise<BridgeResponse> {
     try {
-        await ComposeDraft.openFromEml(msg.eml, msg.contentType);
+        await DisplayEml.openFromEml(msg.eml, msg.contentType);
         return {ok: true};
     } catch (e) {
-        console.error('ProjektXD: openCompose failed:', e);
+        console.error('ProjektXD: openMessage failed:', e);
         return {ok: false, error: errorMessage(e)};
     }
 }
@@ -438,14 +439,14 @@ if (typeof browser === 'undefined') {
     });
 
     // -----------------------------------------------------------------------------------------------------------------
-    // Bridge → Background: openCompose(EML) aus der projektXD-Seite.
+    // Bridge → Background: openMessage(EML) (oder deprecated openCompose) aus der projektXD-Seite.
 
     // @ts-ignore — sendResponse-Signatur in mozilla-webext-types abweichend
     browser.runtime.onMessage.addListener((message: object, _sender: any, sendResponse: (r: BridgeResponse) => void): boolean => {
-        const msg = message as Partial<OpenComposeMsg>;
+        const msg = message as Partial<OpenMessageMsg>;
 
-        if (msg && msg.type === 'openCompose' && msg.eml) {
-            void handleOpenCompose(msg as OpenComposeMsg).then(sendResponse);
+        if (msg && (msg.type === 'openMessage' || msg.type === 'openCompose') && msg.eml) {
+            void handleOpenMessage(msg as OpenMessageMsg).then(sendResponse);
             return true;
         }
 

@@ -21,7 +21,8 @@ Two flows:
    an opened email; the add-on invokes a callback you registered, passing the raw
    EML and a little metadata. You create a ticket and attach the email.
 2. **EML → Thunderbird** — projektXD hands an EML blob to the add-on, which opens
-   a Thunderbird compose window pre-filled from it (as a draft).
+   it read-only in Thunderbird (as if opened from disk). The user can read it or
+   reply/forward via Thunderbird's native buttons.
 
 The add-on already handles login (auto-login if configured) before delivering an
 email, so projektXD does not need to handle the unauthenticated case for flow 1.
@@ -65,6 +66,8 @@ export interface TbEmailMeta {
 
 interface ProjektXDTbBridge {
     readonly version: string;
+    openMessage(eml: Blob): Promise<void>;
+    /** @deprecated Alias of openMessage (read-only). Migrate to openMessage. */
     openCompose(eml: Blob): Promise<void>;
     registerOnEmail(cb: (eml: Blob, meta: TbEmailMeta) => void | Promise<void>): void;
     unregisterOnEmail(): void;
@@ -93,12 +96,12 @@ export const Thunderbird = {
         window.projektxd_tb?.unregisterOnEmail();
     },
 
-    /** Open an EML in a Thunderbird compose window. Rejects if unavailable. */
+    /** Open an EML read-only in Thunderbird. Rejects if unavailable. */
     async openInThunderbird(eml: Blob): Promise<void> {
         if (!window.projektxd_tb) {
             throw new Error('projektXD Thunderbird add-on not available');
         }
-        await window.projektxd_tb.openCompose(eml);
+        await window.projektxd_tb.openMessage(eml);
     }
 };
 ```
@@ -197,8 +200,11 @@ frontend snippet.
 ## Step 3 — Flow 2: open an EML in Thunderbird
 
 Use this where projektXD holds an email as an EML — e.g. an **"In Thunderbird
-öffnen"** action on an `.eml` attachment of a ticket. `openCompose` imports the
-EML as a draft in the account's Drafts folder and opens a compose window on it.
+öffnen"** action on an `.eml` attachment of a ticket. `openMessage` opens the EML
+read-only in a new message-display tab, exactly as if the user had opened the
+file from disk. From there the user can read it or use Thunderbird's native
+Reply / Reply-All / Forward buttons (which fill all fields correctly). Nothing is
+imported or stored.
 
 ```ts
 import { Thunderbird } from './projektxd-thunderbird';
@@ -220,14 +226,21 @@ async function onOpenInThunderbird(attachmentUrl: string): Promise<void> {
     try {
         await Thunderbird.openInThunderbird(eml);
     } catch (err) {
-        console.error('openCompose failed', err);
+        console.error('openMessage failed', err);
         showError('Konnte in Thunderbird nicht geöffnet werden.');
     }
 }
 ```
 
-`openCompose` resolves once the compose window is open, and **rejects** on an
-invalid EML or when no Drafts folder is available — always handle the rejection.
+`openMessage` resolves once the message tab is open, and **rejects** on an
+invalid EML — always handle the rejection.
+
+> **Deprecation**: earlier add-on versions exposed `openCompose`, which imported
+> a Drafts copy and opened a compose window pre-seeded with the original headers
+> (a nonsensical "reply" to the original sender). `openCompose` still exists as a
+> deprecated alias of `openMessage` (same read-only behavior) and logs a warning
+> — switch your call to `openMessage`; the alias will be removed in a future
+> major version.
 
 ---
 
@@ -252,14 +265,15 @@ invalid EML or when no Drafts folder is available — always handle the rejectio
 
 1. Open projektXD in a normal browser → `window.projektxd_tb` is `undefined`,
    app works unchanged, no Thunderbird UI shown.
-2. Open projektXD inside Thunderbird (add-on 2.1.0+, URL configured) →
+2. Open projektXD inside Thunderbird (add-on 2.2.0+, URL configured) →
    `window.projektxd_tb` is set; `console` shows the bridge version.
 3. Open an email in Thunderbird → click **"Als projektXD-Ticket"** → your
    `onEmail` handler fires; a ticket is created with the `.eml` attached.
 4. Click the button **before** projektXD finished loading → the event is still
    delivered once you register (within 10 s).
-5. Click **"In Thunderbird öffnen"** on an `.eml` attachment → a Thunderbird
-   compose window opens pre-filled from the email.
+5. Click **"In Thunderbird öffnen"** on an `.eml` attachment → the email opens
+   read-only in a Thunderbird message tab; Reply / Reply-All / Forward work from
+   there with correct fields.
 
 ---
 
@@ -269,7 +283,7 @@ invalid EML or when no Drafts folder is available — always handle the rejectio
 |---|---|
 | `window.projektxd_tb` is `undefined` inside Thunderbird | The add-on URL does not match the page origin. Set it to the exact projektXD origin in the add-on preferences. |
 | `onEmail` never fires | Registered too late / lost on a reload — register during bootstrap on every load. Also confirm the user is logged in (the add-on auto-logs-in only if enabled). |
-| `openCompose` rejects | Invalid EML, or no Drafts folder on the account. Ensure the blob is the raw `message/rfc822` source and the account has a Drafts folder. |
+| `openMessage` rejects | Invalid EML. Ensure the blob is the raw `message/rfc822` source of the email. |
 | Ticket has no email | Your backend endpoint did not store the uploaded `eml` file. |
 
 See [`browser-api.md`](browser-api.md) for the full API contract and edge cases.

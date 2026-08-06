@@ -4,6 +4,32 @@ All notable changes to the projektXD Thunderbird add-on are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.2.0] — 2026-08-06
+
+Requirements: Thunderbird **140 ESR** or newer · Manifest V3
+
+### Changed
+
+- **EML → Thunderbird now opens the email read-only instead of a compose
+  window** (bridge API **v1.1.0**). The old flow imported the EML into the
+  Drafts folder and opened a compose window seeded with the original message's
+  headers, producing a nonsensical "reply" addressed to the original
+  sender/recipient. The add-on now hands the EML to `messageDisplay.open` as a
+  file, so it opens read-only in a new message tab — exactly as if opened from
+  disk. The user decides for themselves whether to just read it or use
+  Thunderbird's native Reply / Reply-All / Forward buttons, which fill all
+  fields correctly.
+- New bridge method **`openMessage(emlBlob)`** replaces `openCompose`.
+  `openCompose(emlBlob)` is kept as a **deprecated alias** with the same
+  read-only behavior and logs a one-time console warning; it will be removed in
+  a future major version once the projektXD page has migrated.
+
+### Removed
+
+- Dropped the now-unused `messagesImport`, `accountsRead` and `compose`
+  permissions — the read-only open needs only `messagesRead`. Removed the
+  `ComposeDraft` class (Drafts-folder search + import + `compose.beginNew`).
+
 ## [2.1.1] — 2026-08-06
 
 Requirements: Thunderbird **140 ESR** or newer · Manifest V3

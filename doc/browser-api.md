@@ -6,13 +6,13 @@
 
 This document describes the `window.projektxd_tb` JavaScript API that the projektXD Thunderbird add-on injects into the projektXD web app. It is intended for projektXD frontend developers who want to integrate with Thunderbird.
 
-> **Status**: implemented contract — bridge API **v1.0.0**, shipping with the projektXD Thunderbird add-on from version **2.1.0**. Target: Thunderbird 140 ESR.
+> **Status**: implemented contract — bridge API **v1.1.0**, shipping with the projektXD Thunderbird add-on from version **2.2.0**. Target: Thunderbird 140 ESR.
 
 ## Overview
 
 When the projektXD web app is opened inside Thunderbird through the add-on, the add-on injects a small bridge object at `window.projektxd_tb` into the page. The web app can use this object to:
 
-1. **Open a Thunderbird compose window** pre-filled with a given EML — for example, to let the user send a reply drafted inside projektXD.
+1. **Open an email read-only in Thunderbird** from a given EML — exactly as if the user had opened the `.eml` file from disk. The user can then read it or use Thunderbird's native Reply / Reply-All / Forward buttons, which fill all fields correctly.
 2. **Receive emails from Thunderbird** — when the user clicks the "projektXD" button shown in an opened email's header toolbar, a callback registered by the web app is invoked with the email's EML (plus a little convenience metadata), ready for ticket creation.
 
 The API is only injected on the projektXD origin configured in the add-on's preferences. On every other site, `window.projektxd_tb` is `undefined`.
@@ -81,17 +81,24 @@ interface ProjektXDTbBridge {
     readonly version: string;
 
     /**
-     * Opens a compose window in Thunderbird, pre-filled from the given
-     * EML, as a draft in the first account's Drafts folder.
-     *
-     * The draft remains in the Drafts folder until the user sends or
-     * discards it — the add-on does not clean it up.
+     * Opens the given EML read-only in Thunderbird, in a new
+     * message-display tab — exactly as if the user had opened the file
+     * from disk. Nothing is imported or stored; from there the user can
+     * read the mail or use Thunderbird's native Reply / Reply-All /
+     * Forward buttons.
      *
      * @param emlBlob A complete EML file as a Blob (Content-Type
      *                "message/rfc822" recommended, not enforced).
-     * @returns Promise that resolves once the draft has been imported
-     *          and the compose window is open. Rejects on invalid EML
-     *          or a missing Drafts folder.
+     * @returns Promise that resolves once the message tab is open.
+     *          Rejects on invalid EML.
+     */
+    openMessage(emlBlob: Blob): Promise<void>;
+
+    /**
+     * @deprecated Since bridge API v1.1.0. Alias of {@link openMessage}
+     * — now also opens the EML read-only (it no longer creates a compose
+     * draft). Migrate to `openMessage`; this alias will be removed in a
+     * future major version.
      */
     openCompose(emlBlob: Blob): Promise<void>;
 
@@ -160,7 +167,7 @@ if (window.projektxd_tb) {
 }
 ```
 
-## Example: send a draft to Thunderbird
+## Example: open an email in Thunderbird
 
 ```ts
 async function openInThunderbird(emlBlob: Blob): Promise<void> {
@@ -168,7 +175,7 @@ async function openInThunderbird(emlBlob: Blob): Promise<void> {
         throw new Error('projektXD Thunderbird add-on not available');
     }
 
-    await window.projektxd_tb.openCompose(emlBlob);
+    await window.projektxd_tb.openMessage(emlBlob);
 }
 ```
 
@@ -180,9 +187,12 @@ async function openInThunderbird(emlBlob: Blob): Promise<void> {
 - **EML payload**: the `eml` Blob is the *original, unmodified* MIME source as Thunderbird stores it, including all attachments. projektXD is responsible for any MIME parsing beyond the convenience fields in `meta`.
 - **Metadata scope (v1)**: `meta` intentionally carries only `subject`, `from`, `date` and `messageId`. Everything else (body, attachments, full headers) lives in the `eml` Blob — parse it if you need it. Additional convenience fields may be added in a backwards-compatible way later.
 - **Login state**: for the onEmail flow, the add-on checks the login status before delivering the event and, if configured, performs auto-login first. projektXD does not need to handle the unauthenticated case for this flow.
-- **Compose flow**: `openCompose` always creates a draft in the first account's Drafts folder. Per-account selection is planned as a future preference.
+- **Open flow**: `openMessage` opens the EML read-only in a new message-display tab (Thunderbird's `messageDisplay.open`, as if opened from disk). Nothing is imported into a folder, so there is no draft to clean up. Replying is left to Thunderbird's native buttons, which populate all header fields correctly.
+- **Deprecated `openCompose`**: the earlier `openCompose` (which imported a Drafts copy and opened a compose window pre-seeded with the original headers) is replaced by `openMessage`. `openCompose` is kept as an alias with the new read-only behavior and logs a deprecation warning; it will be removed once the projektXD page has migrated.
 - **Buffering**: at most ONE pending onEmail event is buffered while the page loads / registers the callback. Older events are discarded.
 
 ## Version
 
-This document describes bridge API **v1.0.0**, shipping with the projektXD Thunderbird add-on starting from version **2.1.0** (target).
+This document describes bridge API **v1.1.0**, shipping with the projektXD Thunderbird add-on starting from version **2.2.0** (target).
+
+Changes since v1.0.0: added `openMessage(emlBlob)` — opens an EML read-only instead of creating a compose draft. `openCompose(emlBlob)` is deprecated and now aliases `openMessage` (same read-only behavior).

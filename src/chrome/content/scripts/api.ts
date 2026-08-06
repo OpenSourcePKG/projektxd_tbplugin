@@ -1,5 +1,5 @@
 import {ThunderbirdBrowser} from 'mozilla-webext-types';
-import {BridgeResponse, EmailMetaMin, OnEmailMsg, OpenComposeMsg} from '../../inc/Types/bridge';
+import {BridgeResponse, EmailMetaMin, OnEmailMsg, OpenMessageMsg} from '../../inc/Types/bridge';
 
 declare const browser: ThunderbirdBrowser;
 
@@ -9,14 +9,15 @@ declare const browser: ThunderbirdBrowser;
  * Gecko helpers `exportFunction` / `cloneInto` / `window.wrappedJSObject`, so
  * the page can:
  *
- *  - `openCompose(emlBlob)` — open a Thunderbird compose window from an EML.
+ *  - `openMessage(emlBlob)` — open an EML read-only in Thunderbird.
+ *  - `openCompose(emlBlob)` — deprecated alias for `openMessage`.
  *  - `registerOnEmail(cb)`  — receive emails the user picks in Thunderbird.
  *  - `unregisterOnEmail()`  — stop receiving.
  *
  * See `doc/browser-api.md` for the public contract.
  */
 
-const API_VERSION = '1.0.0';
+const API_VERSION = '1.1.0';
 const BUFFER_MS = 10000;
 
 console.log('projektxd_tb: bridge content script loaded');
@@ -54,15 +55,15 @@ function errorMessage(err: any): string {
 }
 
 /**
- * Implementation of `window.projektxd_tb.openCompose(emlBlob)`.
+ * Implementation of `window.projektxd_tb.openMessage(emlBlob)`.
  * Runs in the isolated world; `emlBlob` is an Xray wrapper of the page Blob.
  */
-function openComposeImpl(emlBlob: Blob): any {
+function openMessageImpl(emlBlob: Blob): any {
     return pagePromise(async(): Promise<void> => {
         const buffer = await emlBlob.arrayBuffer();
 
-        const msg: OpenComposeMsg = {
-            type: 'openCompose',
+        const msg: OpenMessageMsg = {
+            type: 'openMessage',
             eml: buffer,
             contentType: emlBlob.type || 'message/rfc822'
         };
@@ -70,9 +71,25 @@ function openComposeImpl(emlBlob: Blob): any {
         const resp = await browser.runtime.sendMessage(msg) as BridgeResponse | undefined;
 
         if (!resp || !resp.ok) {
-            throw new Error(resp && resp.error ? resp.error : 'openCompose failed');
+            throw new Error(resp && resp.error ? resp.error : 'openMessage failed');
         }
     });
+}
+
+/** Whether the deprecation warning for `openCompose` has already been logged. */
+let openComposeWarned = false;
+
+/**
+ * Deprecated alias of {@link openMessageImpl}. Kept until the projektXD page
+ * migrates to `openMessage`; behaves identically (read-only preview).
+ */
+function openComposeImpl(emlBlob: Blob): any {
+    if (!openComposeWarned) {
+        openComposeWarned = true;
+        console.warn('projektxd_tb: openCompose() is deprecated and now opens the email read-only — use openMessage() instead.');
+    }
+
+    return openMessageImpl(emlBlob);
 }
 
 /**
@@ -158,6 +175,7 @@ function installBridge(): void {
     const api: any = cloneInto({}, pageWindow);
 
     api.version = API_VERSION;
+    exportFunction(openMessageImpl, api, {defineAs: 'openMessage'});
     exportFunction(openComposeImpl, api, {defineAs: 'openCompose'});
     exportFunction(registerOnEmailImpl, api, {defineAs: 'registerOnEmail'});
     exportFunction(unregisterOnEmailImpl, api, {defineAs: 'unregisterOnEmail'});

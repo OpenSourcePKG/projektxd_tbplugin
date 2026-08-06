@@ -33,14 +33,23 @@ export type EmailMetaMin = {
 
 /**
  * Message sent from the bridge content script to the background when the page
- * calls `openCompose(emlBlob)`. The EML travels as an ArrayBuffer because it
+ * calls `openMessage(emlBlob)`. The EML travels as an ArrayBuffer because it
  * survives structured clone across the content↔background boundary reliably.
+ *
+ * `type` is `'openMessage'` for the current API and `'openCompose'` for the
+ * deprecated alias — both are handled identically (read-only preview).
  */
-export type OpenComposeMsg = {
-    type: 'openCompose';
+export type OpenMessageMsg = {
+    type: 'openMessage' | 'openCompose';
     eml: ArrayBuffer;
     contentType: string;
 };
+
+/**
+ * @deprecated Use {@link OpenMessageMsg}. Kept as an alias until the projektXD
+ * page migrates from `openCompose` to `openMessage`.
+ */
+export type OpenComposeMsg = OpenMessageMsg;
 
 /**
  * Message sent from the background to the bridge content script to deliver an
@@ -54,7 +63,7 @@ export type OnEmailMsg = {
 };
 
 /**
- * Generic response for request/response messages (e.g. openCompose).
+ * Generic response for request/response messages (e.g. openMessage).
  */
 export type BridgeResponse = {
     ok: boolean;
