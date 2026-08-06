@@ -4,6 +4,20 @@ All notable changes to the projektXD Thunderbird add-on are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.1.1] — 2026-08-06
+
+Requirements: Thunderbird **140 ESR** or newer · Manifest V3
+
+### Fixed
+
+- **Sending an email from projektXD to Thunderbird failed** with
+  *"Incorrect argument types for messages.import."* The `openCompose` bridge
+  path passed the whole `MailFolder` object to `messages.import`, but the
+  Thunderbird API (mandatory for Manifest V3) expects a `MailFolderId` string.
+  `ComposeDraft.openFromEml` now passes the Drafts folder's `id`. Verified
+  end-to-end in Thunderbird 140.11.1 ESR: the EML is imported into the Drafts
+  folder and the compose window opens.
+
 ## [2.1.0] — 2026-08-05
 
 Requirements: Thunderbird **140 ESR** or newer · Manifest V3
@@ -51,5 +65,6 @@ Requirements: Thunderbird **140 ESR** or newer · Manifest V3
   silently re-authenticate with the stored credentials when the session has
   expired.
 
+[2.1.1]: https://git.pegenau.de/pkg/projektxd_tbplugin
 [2.1.0]: https://git.pegenau.de/pkg/projektxd_tbplugin
 [2.0.0]: https://git.pegenau.de/pkg/projektxd_tbplugin

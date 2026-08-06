@@ -28,8 +28,17 @@ export class ComposeDraft {
             throw new Error('ComposeDraft: no Drafts folder found on the first account');
         }
 
+        // messages.import expects a MailFolderId (string), not a MailFolder object —
+        // mandatory for MV3 add-ons. Passing the object fails with
+        // "Incorrect argument types for messages.import."
+        const draftsFolderId = draftsFolder.id;
+
+        if (typeof draftsFolderId !== 'string') {
+            throw new Error('ComposeDraft: Drafts folder has no MailFolderId');
+        }
+
         // @ts-ignore — messages.import is not typed in mozilla-webext-types
-        const imported = await browser.messages.import(file, draftsFolder);
+        const imported = await browser.messages.import(file, draftsFolderId);
 
         if (!imported || typeof imported.id !== 'number') {
             throw new Error('ComposeDraft: messages.import returned no message');
