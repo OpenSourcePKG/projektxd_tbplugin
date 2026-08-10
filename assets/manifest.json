@@ -15,17 +15,30 @@
   "default_locale": "de",
   "description": "__MSG_extensionDescription__",
   "icons": {
-    "64": "chrome/content/images/projektxd.png"
+    "16": "chrome/content/images/projektXD-16.png",
+    "32": "chrome/content/images/projektXD-32.png",
+    "48": "chrome/content/images/projektXD-48.png",
+    "64": "chrome/content/images/projektXD-64.png",
+    "96": "chrome/content/images/projektXD-96.png",
+    "128": "chrome/content/images/projektXD-128.png"
   },
   "manifest_version": 3,
   "action": {
     "default_title": "__MSG_extensionName__",
-    "default_icon": "chrome/content/images/projektxd.png",
+    "default_icon": {
+      "16": "chrome/content/images/projektXD-16.png",
+      "24": "chrome/content/images/projektXD-24.png",
+      "32": "chrome/content/images/projektXD-32.png"
+    },
     "allowed_spaces": []
   },
   "message_display_action": {
     "default_title": "__MSG_messageActionTitle__",
-    "default_icon": "chrome/content/images/projektxd.png"
+    "default_icon": {
+      "16": "chrome/content/images/projektXD-16.png",
+      "24": "chrome/content/images/projektXD-24.png",
+      "32": "chrome/content/images/projektXD-32.png"
+    }
   },
   "name": "__MSG_extensionName__",
   "options_ui": {
