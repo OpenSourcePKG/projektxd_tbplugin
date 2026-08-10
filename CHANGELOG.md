@@ -4,6 +4,23 @@ All notable changes to the projektXD Thunderbird add-on are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.2.1] — 2026-08-10
+
+Requirements: Thunderbird **140 ESR** or newer · Manifest V3
+
+### Changed
+
+- **Renamed the add-on to "projektXD Connector".** The display name
+  (`extensionName`) is updated in both the `en_US` and `de` locales. Brand text
+  is normalized from `ProjektXD` to the correct `projektXD` casing across UI
+  strings, docs and log output — TypeScript class/type identifiers keep
+  PascalCase by language convention.
+- **New logo and full icon set.** Replaced the single 120×120 PNG with a
+  scalable SVG source (`projektXD.svg`) plus rendered PNGs at 16 / 24 / 32 / 48 /
+  64 / 96 / 128 px. The manifest icons are now size-keyed (16–128), and the
+  toolbar and message-display buttons ship 16 / 24 / 32 px icons for standard
+  and HiDPI displays.
+
 ## [2.2.0] — 2026-08-06
 
 Requirements: Thunderbird **140 ESR** or newer · Manifest V3
@@ -91,6 +108,8 @@ Requirements: Thunderbird **140 ESR** or newer · Manifest V3
   silently re-authenticate with the stored credentials when the session has
   expired.
 
+[2.2.1]: https://git.pegenau.de/pkg/projektxd_tbplugin
+[2.2.0]: https://git.pegenau.de/pkg/projektxd_tbplugin
 [2.1.1]: https://git.pegenau.de/pkg/projektxd_tbplugin
 [2.1.0]: https://git.pegenau.de/pkg/projektxd_tbplugin
 [2.0.0]: https://git.pegenau.de/pkg/projektxd_tbplugin
