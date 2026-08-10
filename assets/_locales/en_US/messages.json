@@ -1,21 +1,21 @@
 {
   "extensionDescription": {
-    "message": "Allows work with ProjektXD"
+    "message": "Allows work with projektXD"
   },
   "extensionName": {
-    "message": "ProjektXD"
+    "message": "projektXD Connector"
   },
   "optionsHeadingCommon": {
-    "message": "ProjektXD Settings"
+    "message": "projektXD Settings"
   },
   "optionsSubtitle": {
-    "message": "Configure access to your ProjektXD instance"
+    "message": "Configure access to your projektXD instance"
   },
   "optionsSectionConnection": {
     "message": "Connection"
   },
   "optionsSectionConnectionHelp": {
-    "message": "Where is your ProjektXD instance reachable?"
+    "message": "Where is your projektXD instance reachable?"
   },
   "optionsSectionCredentials": {
     "message": "Credentials"
@@ -51,7 +51,7 @@
     "message": "Permission missing"
   },
   "optionsPermissionHelp": {
-    "message": "To sign in automatically, the add-on needs one-time access to the ProjektXD URL."
+    "message": "To sign in automatically, the add-on needs one-time access to the projektXD URL."
   },
   "optionsPermissionGrant": {
     "message": "Activate"

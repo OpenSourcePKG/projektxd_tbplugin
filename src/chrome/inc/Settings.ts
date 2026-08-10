@@ -9,7 +9,7 @@ declare const browser: ThunderbirdBrowser;
 export class Settings {
 
     /**
-     * The default options for ProjektXD.
+     * The default options for projektXD.
      * @protected {ProjektXDOptions}
      */
     protected _getDefaults(): ProjektXDOptions {
@@ -22,7 +22,7 @@ export class Settings {
     }
 
     /**
-     * Return the options for ProjektXD settings.
+     * Return the options for projektXD settings.
      * @returns {ProjektXDOptions}
      */
     public async get(): Promise<ProjektXDOptions> {
@@ -44,7 +44,7 @@ export class Settings {
     }
 
     /**
-     * Set the options for ProjektXD.
+     * Set the options for projektXD.
      * @param {ProjektXDOptions} options
      * @returns {any}
      */

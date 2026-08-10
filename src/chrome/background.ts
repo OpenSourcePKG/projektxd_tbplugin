@@ -84,7 +84,7 @@ function whenTabReady(tid: number, origin: string): Promise<void> {
                 resolve();
             }
         }).catch((e: any): void => {
-            console.error('ProjektXD: tabs.get failed:', e);
+            console.error('projektXD: tabs.get failed:', e);
         });
     });
 }
@@ -100,7 +100,7 @@ async function injectAndLogin(tid: number, options: ProjektXDOptions): Promise<v
     try {
         const tab = await browser.tabs.get(tid);
         const all = await browser.permissions.getAll();
-        console.log('ProjektXD: about to inject — tab.url=', tab.url, 'granted=', JSON.stringify(all));
+        console.log('projektXD: about to inject — tab.url=', tab.url, 'granted=', JSON.stringify(all));
 
         // @ts-ignore — MV3-API, in mozilla-webext-types nicht typisiert
         await browser.scripting.executeScript({
@@ -109,8 +109,8 @@ async function injectAndLogin(tid: number, options: ProjektXDOptions): Promise<v
         });
         await browser.tabs.sendMessage(tid, options);
     } catch (e) {
-        console.error('ProjektXD: auto-login injection failed:', e);
-        console.error('ProjektXD: hint — open the options page and click "Aktivieren" to grant host access.');
+        console.error('projektXD: auto-login injection failed:', e);
+        console.error('projektXD: hint — open the options page and click "Aktivieren" to grant host access.');
     }
 }
 
@@ -190,7 +190,7 @@ async function notify(titleKey: string, bodyKey: string): Promise<void> {
             iconUrl
         });
     } catch (e) {
-        console.error('ProjektXD: notify failed:', e);
+        console.error('projektXD: notify failed:', e);
     }
 }
 
@@ -219,10 +219,10 @@ async function registerBridge(origin: string): Promise<void> {
         }]);
 
         if (Debug.is()) {
-            console.log('ProjektXD::background: bridge registered for', origin);
+            console.log('projektXD::background: bridge registered for', origin);
         }
     } catch (e) {
-        console.error('ProjektXD: registerBridge failed:', e);
+        console.error('projektXD: registerBridge failed:', e);
     }
 }
 
@@ -257,7 +257,7 @@ async function handleOpenMessage(msg: OpenMessageMsg): Promise<BridgeResponse> {
         await DisplayEml.openFromEml(msg.eml, msg.contentType);
         return {ok: true};
     } catch (e) {
-        console.error('ProjektXD: openMessage failed:', e);
+        console.error('projektXD: openMessage failed:', e);
         return {ok: false, error: errorMessage(e)};
     }
 }
@@ -293,19 +293,19 @@ async function handleTicketFromEmail(tab: any): Promise<void> {
     try {
         email = await DisplayedEmail.fromTab(tab.id);
     } catch (e) {
-        console.error('ProjektXD: could not read displayed email:', e);
+        console.error('projektXD: could not read displayed email:', e);
         return;
     }
 
     if (!email) {
-        console.warn('ProjektXD: no message displayed in tab', tab.id);
+        console.warn('projektXD: no message displayed in tab', tab.id);
         return;
     }
 
     const tabId = await ensureProjektXDTab(options, origin);
 
     if (tabId === null) {
-        console.error('ProjektXD: could not open projektXD tab');
+        console.error('projektXD: could not open projektXD tab');
         return;
     }
 
@@ -325,15 +325,15 @@ async function handleTicketFromEmail(tab: any): Promise<void> {
     try {
         await browser.tabs.sendMessage(tabId, message);
     } catch (e) {
-        console.error('ProjektXD: delivering onEmail failed:', e);
+        console.error('projektXD: delivering onEmail failed:', e);
     }
 }
 
 if (typeof browser === 'undefined') {
-    console.error('ProjektXD::background: browser object is not defined!');
+    console.error('projektXD::background: browser object is not defined!');
 } else {
     if (Debug.is()) {
-        console.log('ProjektXD::background: init');
+        console.log('projektXD::background: init');
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -344,7 +344,7 @@ if (typeof browser === 'undefined') {
         const options = await new Settings().get();
 
         if (!options.url) {
-            console.warn('ProjektXD: no URL configured — opening options page');
+            console.warn('projektXD: no URL configured — opening options page');
             // @ts-ignore
             await browser.runtime.openOptionsPage();
             return;
@@ -353,7 +353,7 @@ if (typeof browser === 'undefined') {
         const origin = originFromUrl(options.url);
 
         if (!origin) {
-            console.error('ProjektXD: invalid URL in options:', options.url);
+            console.error('projektXD: invalid URL in options:', options.url);
             // @ts-ignore
             await browser.runtime.openOptionsPage();
             return;
@@ -376,7 +376,7 @@ if (typeof browser === 'undefined') {
         }
 
         if (!targetTab || !targetTab.id) {
-            console.error('ProjektXD: could not open tab');
+            console.error('projektXD: could not open tab');
             return;
         }
 
@@ -412,7 +412,7 @@ if (typeof browser === 'undefined') {
 
         if (existingTabId === null) {
             if (Debug.is()) {
-                console.log('ProjektXD::background: onStartup — no open projektXD tab, nothing to do');
+                console.log('projektXD::background: onStartup — no open projektXD tab, nothing to do');
             }
             return;
         }

@@ -1,21 +1,21 @@
 {
   "extensionDescription": {
-    "message": "Allows work with ProjektXD"
+    "message": "Allows work with projektXD"
   },
   "extensionName": {
-    "message": "ProjektXD"
+    "message": "projektXD Connector"
   },
   "optionsHeadingCommon": {
-    "message": "ProjektXD Einstellungen"
+    "message": "projektXD Einstellungen"
   },
   "optionsSubtitle": {
-    "message": "Zugang zu deiner ProjektXD-Instanz konfigurieren"
+    "message": "Zugang zu deiner projektXD-Instanz konfigurieren"
   },
   "optionsSectionConnection": {
     "message": "Verbindung"
   },
   "optionsSectionConnectionHelp": {
-    "message": "Wo ist deine ProjektXD-Instanz erreichbar?"
+    "message": "Wo ist deine projektXD-Instanz erreichbar?"
   },
   "optionsSectionCredentials": {
     "message": "Anmeldedaten"
@@ -51,7 +51,7 @@
     "message": "Berechtigung fehlt"
   },
   "optionsPermissionHelp": {
-    "message": "Damit sich das Add-on automatisch anmelden kann, muss der Zugriff auf die ProjektXD-URL einmal erteilt werden."
+    "message": "Damit sich das Add-on automatisch anmelden kann, muss der Zugriff auf die projektXD-URL einmal erteilt werden."
   },
   "optionsPermissionGrant": {
     "message": "Aktivieren"

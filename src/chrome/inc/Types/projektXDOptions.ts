@@ -1,5 +1,5 @@
 /**
- * ProjektXD Options
+ * projektXD Options
  */
 export type ProjektXDOptions = {
     url: string;

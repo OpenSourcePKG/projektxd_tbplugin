@@ -47,14 +47,14 @@ export class Options {
             return elm as HTMLInputElement;
         }
 
-        throw Error(`ProjektXD::Options: Element not found by name: ${name}`);
+        throw Error(`projektXD::Options: Element not found by name: ${name}`);
     }
 
     /**
      * Call by window laod event.
      */
     public static async onLoad(): Promise<void> {
-        console.log('ProjektXD::Options: onLoad');
+        console.log('projektXD::Options: onLoad');
 
         Translation.lang();
 
@@ -131,7 +131,7 @@ export class Options {
             try {
                 granted = await browser.permissions.contains({origins: [HOST_PATTERN]});
             } catch (e) {
-                console.error('ProjektXD::Options: permissions.contains failed', e);
+                console.error('projektXD::Options: permissions.contains failed', e);
             }
 
             if (statusOk) {
@@ -155,7 +155,7 @@ export class Options {
                 const requestPromise = browser.permissions.request({origins: [HOST_PATTERN]});
 
                 requestPromise.then(async(granted) => {
-                    console.log('ProjektXD::Options: permissions.request →', granted);
+                    console.log('projektXD::Options: permissions.request →', granted);
 
                     // Settings danach speichern (kein Gesture nötig).
                     if (onSave) {
@@ -164,7 +164,7 @@ export class Options {
 
                     await refreshStatus();
                 }).catch((e) => {
-                    console.error('ProjektXD::Options: permission request failed', e);
+                    console.error('projektXD::Options: permission request failed', e);
                     void refreshStatus();
                 });
             });
@@ -206,6 +206,6 @@ export class Options {
  * Main registiert function.
  */
 (async(): Promise<void> => {
-    console.log('ProjektXD::Options: addEventListener');
+    console.log('projektXD::Options: addEventListener');
     window.addEventListener('load', Options.onLoad, false);
 })();
