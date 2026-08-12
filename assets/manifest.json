@@ -23,22 +23,9 @@
     "128": "chrome/content/images/projektXD-128.png"
   },
   "manifest_version": 3,
-  "action": {
-    "default_title": "__MSG_extensionName__",
-    "default_icon": {
-      "16": "chrome/content/images/projektXD-16.png",
-      "24": "chrome/content/images/projektXD-24.png",
-      "32": "chrome/content/images/projektXD-32.png"
-    },
-    "allowed_spaces": []
-  },
   "message_display_action": {
     "default_title": "__MSG_messageActionTitle__",
-    "default_icon": {
-      "16": "chrome/content/images/projektXD-16.png",
-      "24": "chrome/content/images/projektXD-24.png",
-      "32": "chrome/content/images/projektXD-32.png"
-    }
+    "default_icon": "chrome/content/images/projektXD-symbolic.svg"
   },
   "name": "__MSG_extensionName__",
   "options_ui": {
@@ -57,5 +44,15 @@
   "host_permissions": [
     "<all_urls>"
   ],
-  "version": "2.2.1"
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "chrome/content/images/projektXD-favicon.svg"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
+  "version": "2.3.0"
 }

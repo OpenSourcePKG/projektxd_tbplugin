@@ -12,6 +12,19 @@ declare const browser: ThunderbirdBrowser;
 /** Id of the dynamically registered bridge content script. */
 const BRIDGE_SCRIPT_ID = 'projektxd-bridge';
 
+/** Stable name of the projektXD entry in Thunderbird's spaces toolbar. */
+const SPACE_NAME = 'projektxd';
+
+/** Cached origin / autologin flag, kept in sync with the stored options. */
+let cfgOrigin: string | null = null;
+let cfgAutologin = false;
+
+/** Full URL of the bundled options page (used for the "not configured" hint). */
+let optionsPageUrl: string | null = null;
+
+/** Tabs whose projektXD session we already tried to auto-login this visit. */
+const loggedInTabs = new Set<number>();
+
 function originFromUrl(url: string): string | null {
     try {
         return new URL(url).origin;
@@ -246,6 +259,158 @@ async function refreshBridge(): Promise<void> {
 }
 
 /**
+ * Re-read the stored options into the origin/autologin cache used by the
+ * tab-update auto-login listener.
+ *
+ * @returns {Promise<ProjektXDOptions>} the freshly read options
+ */
+async function reloadConfig(): Promise<ProjektXDOptions> {
+    const options = await new Settings().get();
+
+    cfgOrigin = options.url ? originFromUrl(options.url) : null;
+    cfgAutologin = Boolean(options.autologin);
+
+    return options;
+}
+
+/**
+ * Create — or update — the projektXD entry in Thunderbird's spaces toolbar
+ * (the vertical app bar on the left, next to Mail/Contacts/Calendar). Clicking
+ * it opens the configured projektXD instance in a tab; the auto-login is then
+ * triggered by `onTabUpdated` once that tab has loaded. Falls back to the
+ * options page while no instance URL is configured yet.
+ *
+ * @param {ProjektXDOptions} options
+ */
+async function ensureSpace(options: ProjektXDOptions): Promise<void> {
+    // @ts-ignore — runtime.getURL not typed in mozilla-webext-types
+    const optionsUrl: string = browser.runtime.getURL('chrome/content/ui/options.html');
+    const defaultUrl = options.url && originFromUrl(options.url) ? options.url : optionsUrl;
+
+    const buttonProperties = {
+        title: browser.i18n.getMessage('extensionName'),
+        defaultIcons: 'chrome/content/images/projektXD-symbolic.svg'
+    };
+
+    try {
+        const existing = await browser.spaces.query({name: SPACE_NAME});
+
+        if (existing && existing.length > 0) {
+            await browser.spaces.update(SPACE_NAME, defaultUrl, buttonProperties);
+        } else {
+            await browser.spaces.create(SPACE_NAME, defaultUrl, buttonProperties);
+        }
+    } catch (e) {
+        console.error('projektXD: ensureSpace failed:', e);
+    }
+}
+
+/**
+ * Auto-login hook: whenever a tab finishes loading the configured projektXD
+ * origin, inject the login script once per visit. This replaces the former
+ * toolbar-click trigger, since spaces-toolbar buttons expose no onClicked
+ * event — opening the space loads the tab, which we pick up here.
+ *
+ * @param {number} tabId
+ * @param {any} changeInfo
+ * @param {any} tab
+ */
+async function onTabUpdated(tabId: number, changeInfo: any, tab: any): Promise<void> {
+    if (changeInfo.status !== 'complete') {
+        return;
+    }
+
+    const onOrigin = Boolean(
+        cfgOrigin && tab && typeof tab.url === 'string' && tab.url.startsWith(cfgOrigin)
+    );
+
+    if (!onOrigin) {
+        // Left the projektXD origin — allow a fresh auto-login on the next visit.
+        loggedInTabs.delete(tabId);
+        return;
+    }
+
+    if (!cfgAutologin || loggedInTabs.has(tabId)) {
+        return;
+    }
+
+    loggedInTabs.add(tabId);
+
+    const options = await new Settings().get();
+    await injectAndLogin(tabId, options);
+}
+
+/**
+ * Re-auth hook: when the user activates (clicks the space / switches to) an
+ * already-loaded projektXD tab, re-check the session from the background and
+ * silently log in again if it has expired — then reload so the page picks up
+ * the fresh session. Uses the background fetch API (credentials: 'include'),
+ * so it does not accumulate content scripts across repeated activations.
+ *
+ * @param {number} tabId
+ */
+async function reauthActiveTab(tabId: number): Promise<void> {
+    if (!cfgAutologin || !cfgOrigin) {
+        return;
+    }
+
+    let tab: any;
+
+    try {
+        tab = await browser.tabs.get(tabId);
+    } catch (_e) {
+        return;
+    }
+
+    if (!tab || tab.status !== 'complete' || typeof tab.url !== 'string' || !tab.url.startsWith(cfgOrigin)) {
+        return;
+    }
+
+    const options = await new Settings().get();
+
+    if (!options.url || !options.autologin || !options.username) {
+        return;
+    }
+
+    const isLoggedIn = await ProjektXDApi.loadInit(options.url);
+
+    if (isLoggedIn !== false) {
+        // true = still logged in, null = check failed — nothing to do.
+        return;
+    }
+
+    const success = await ProjektXDApi.login(options.url, options.username, options.password);
+
+    if (success) {
+        try {
+            await browser.tabs.reload(tabId);
+        } catch (e) {
+            console.error('projektXD: reload after re-auth failed:', e);
+        }
+    }
+}
+
+/**
+ * When the spaces button is used while no instance URL is configured, it opens
+ * the options page instead. Show a notification there that points the user to
+ * the settings, so it is obvious what to do next.
+ *
+ * @param {any} tab the tab that just finished loading
+ */
+async function maybeNotifyUnconfigured(tab: any): Promise<void> {
+    if (cfgOrigin || !optionsPageUrl) {
+        // URL already configured (or options URL unknown) — no hint needed.
+        return;
+    }
+
+    if (!tab || typeof tab.url !== 'string' || !tab.url.startsWith(optionsPageUrl)) {
+        return;
+    }
+
+    await notify('notifyNoUrlTitle', 'notifyNoUrlBody');
+}
+
+/**
  * Handle an `openMessage` (or deprecated `openCompose`) request coming from the
  * bridge content script: open the EML read-only, as if opened from disk.
  *
@@ -337,54 +502,37 @@ if (typeof browser === 'undefined') {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
-    // Toolbar-Klick: bestehenden Tab wiederverwenden oder neuen öffnen, dann Auto-Login
+    // Spaces-Toolbar (linke App-Leiste): projektXD-Eintrag anlegen/aktualisieren.
+    // Der Button hat kein onClicked — Thunderbird öffnet beim Klick den Tab mit
+    // der konfigurierten URL; der Auto-Login läuft dann über tabs.onUpdated.
 
-    // @ts-ignore
-    browser.action.onClicked.addListener(async(): Promise<void> => {
-        const options = await new Settings().get();
+    // @ts-ignore — runtime.getURL not typed in mozilla-webext-types
+    optionsPageUrl = browser.runtime.getURL('chrome/content/ui/options.html');
 
-        if (!options.url) {
-            console.warn('projektXD: no URL configured — opening options page');
-            // @ts-ignore
-            await browser.runtime.openOptionsPage();
-            return;
+    void reloadConfig().then(ensureSpace);
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Tab lädt projektXD → Auto-Login (Ersatz für den früheren Toolbar-Klick).
+    // Lädt der Button mangels URL die Optionsseite, wird dort ein Hinweis gezeigt.
+
+    browser.tabs.onUpdated.addListener((tabId: number, changeInfo: any, tab: any): void => {
+        void onTabUpdated(tabId, changeInfo, tab);
+
+        if (changeInfo.status === 'complete') {
+            void maybeNotifyUnconfigured(tab);
         }
+    });
 
-        const origin = originFromUrl(options.url);
+    // Space-Klick / Tab-Wechsel auf einen bereits offenen projektXD-Tab →
+    // Session erneut prüfen und ggf. wieder einloggen ("jeder Klick = Login-Check").
+    // @ts-ignore — tabs.onActivated shape not fully typed in mozilla-webext-types
+    browser.tabs.onActivated.addListener((info: any): void => {
+        void reauthActiveTab(info.tabId);
+    });
 
-        if (!origin) {
-            console.error('projektXD: invalid URL in options:', options.url);
-            // @ts-ignore
-            await browser.runtime.openOptionsPage();
-            return;
-        }
-
-        const existingTabId = await findTabByOrigin(origin);
-
-        let targetTab: any;
-
-        if (existingTabId !== null) {
-            targetTab = await browser.tabs.update(existingTabId, {
-                url: options.url,
-                active: true
-            });
-        } else {
-            targetTab = await browser.tabs.create({
-                active: true,
-                url: options.url
-            });
-        }
-
-        if (!targetTab || !targetTab.id) {
-            console.error('projektXD: could not open tab');
-            return;
-        }
-
-        if (!options.autologin) {
-            return;
-        }
-
-        loginWhenReady(targetTab.id, origin, options);
+    // @ts-ignore — tabs.onRemoved not typed in mozilla-webext-types
+    browser.tabs.onRemoved.addListener((tabId: number): void => {
+        loggedInTabs.delete(tabId);
     });
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -396,7 +544,8 @@ if (typeof browser === 'undefined') {
     browser.runtime.onStartup.addListener(async(): Promise<void> => {
         void refreshBridge();
 
-        const options = await new Settings().get();
+        const options = await reloadConfig();
+        void ensureSpace(options);
 
         if (!options.autologin || !options.url) {
             return;
@@ -417,6 +566,9 @@ if (typeof browser === 'undefined') {
             return;
         }
 
+        // Restored tabs are already "complete", so tabs.onUpdated won't fire —
+        // trigger the login here and mark the tab as handled for this visit.
+        loggedInTabs.add(existingTabId);
         loginWhenReady(existingTabId, origin, options);
     });
 
@@ -426,15 +578,17 @@ if (typeof browser === 'undefined') {
     // @ts-ignore
     browser.runtime.onInstalled.addListener((): void => {
         void refreshBridge();
+        void reloadConfig().then(ensureSpace);
     });
 
     // -----------------------------------------------------------------------------------------------------------------
-    // Options geändert: Bridge für neue Origin neu registrieren.
+    // Options geändert: Bridge neu registrieren und Spaces-Button (URL/Titel) aktualisieren.
 
     // @ts-ignore — storage.onChanged not typed in mozilla-webext-types
     browser.storage.onChanged.addListener((changes: any, area: string): void => {
         if (area === 'local' && changes && changes.projektxd) {
             void refreshBridge();
+            void reloadConfig().then(ensureSpace);
         }
     });
 
