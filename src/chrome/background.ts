@@ -12,6 +12,9 @@ declare const browser: ThunderbirdBrowser;
 /** Id of the dynamically registered bridge content script. */
 const BRIDGE_SCRIPT_ID = 'projektxd-bridge';
 
+/** Id of the dynamically registered favicon content script. */
+const FAVICON_SCRIPT_ID = 'projektxd-favicon';
+
 /** Stable name of the projektXD entry in Thunderbird's spaces toolbar. */
 const SPACE_NAME = 'projektxd';
 
@@ -208,34 +211,82 @@ async function notify(titleKey: string, bodyKey: string): Promise<void> {
 }
 
 /**
- * (Re-)register the bridge content script (`api.js`) for the configured origin
- * only. This is what limits `window.projektxd_tb` injection to projektXD.
+ * (Re-)register the projektXD-origin content scripts for the configured origin
+ * only: the bridge (`api.js`, which limits `window.projektxd_tb` to projektXD)
+ * and the favicon injector (`favicon.js`, which puts the add-on icon on the
+ * instance tab).
  *
  * @param {string} origin
  */
 async function registerBridge(origin: string): Promise<void> {
     try {
         // @ts-ignore — scripting.unregisterContentScripts not fully typed
-        await browser.scripting.unregisterContentScripts({ids: [BRIDGE_SCRIPT_ID]});
+        await browser.scripting.unregisterContentScripts({ids: [BRIDGE_SCRIPT_ID, FAVICON_SCRIPT_ID]});
     } catch (_e) {
         // not registered yet — ignore
     }
 
     try {
         // @ts-ignore — scripting.registerContentScripts not fully typed
-        await browser.scripting.registerContentScripts([{
-            id: BRIDGE_SCRIPT_ID,
-            js: ['chrome/content/scripts/api.js'],
-            matches: [`${origin}/*`],
-            runAt: 'document_start',
-            persistAcrossSessions: false
-        }]);
+        await browser.scripting.registerContentScripts([
+            {
+                id: BRIDGE_SCRIPT_ID,
+                js: ['chrome/content/scripts/api.js'],
+                matches: [`${origin}/*`],
+                runAt: 'document_start',
+                persistAcrossSessions: false
+            },
+            {
+                id: FAVICON_SCRIPT_ID,
+                js: ['chrome/content/scripts/favicon.js'],
+                matches: [`${origin}/*`],
+                runAt: 'document_start',
+                persistAcrossSessions: false
+            }
+        ]);
 
         if (Debug.is()) {
-            console.log('projektXD::background: bridge registered for', origin);
+            console.log('projektXD::background: content scripts registered for', origin);
         }
     } catch (e) {
         console.error('projektXD: registerBridge failed:', e);
+    }
+}
+
+/**
+ * Inject the favicon script into already-open projektXD tabs, so the icon
+ * appears immediately — without reloading the tab (which would lose the user's
+ * place). Needed after startup (restored tabs) and after (re-)registration,
+ * since dynamically registered content scripts only apply to future loads.
+ */
+async function injectFaviconIntoOpenTabs(): Promise<void> {
+    if (!cfgOrigin) {
+        return;
+    }
+
+    let tabs: any[];
+
+    try {
+        tabs = await browser.tabs.query({});
+    } catch (e) {
+        console.error('projektXD: tabs.query failed:', e);
+        return;
+    }
+
+    for (const tab of tabs) {
+        if (!tab || typeof tab.id !== 'number' || typeof tab.url !== 'string' || !tab.url.startsWith(cfgOrigin)) {
+            continue;
+        }
+
+        try {
+            // @ts-ignore — scripting.executeScript not typed in mozilla-webext-types
+            await browser.scripting.executeScript({
+                target: {tabId: tab.id},
+                files: ['chrome/content/scripts/favicon.js']
+            });
+        } catch (e) {
+            console.error('projektXD: favicon injection failed for tab', tab.id, e);
+        }
     }
 }
 
@@ -494,6 +545,75 @@ async function handleTicketFromEmail(tab: any): Promise<void> {
     }
 }
 
+/**
+ * After the options changed, bring already-open tabs in line with the new
+ * configuration without requiring a Thunderbird restart:
+ *
+ *  - Any tab already on the projektXD origin is reloaded, so the freshly
+ *    (re-)registered bridge content script runs there. This is what makes the
+ *    tab favicon and the page API appear immediately instead of only after a
+ *    restart.
+ *  - The spaces button's options tab is sent straight to the instance once the
+ *    add-on is fully configured for silent login (url + username + password +
+ *    autologin). That logs the user in and turns the spaces tab into the
+ *    instance tab, so clicking the spaces button no longer re-opens settings.
+ *    The gate avoids navigating away while the form is still being filled —
+ *    fields only save on blur, so all four are present only once the user is
+ *    done.
+ *
+ * @param {ProjektXDOptions} options
+ */
+async function reconcileTabsAfterConfig(options: ProjektXDOptions): Promise<void> {
+    if (!options.url || !cfgOrigin) {
+        return;
+    }
+
+    const readyForLogin = Boolean(options.autologin && options.username && options.password);
+
+    let tabs: any[];
+
+    try {
+        tabs = await browser.tabs.query({});
+    } catch (e) {
+        console.error('projektXD: tabs.query failed:', e);
+        return;
+    }
+
+    for (const tab of tabs) {
+        if (!tab || typeof tab.id !== 'number' || typeof tab.url !== 'string') {
+            continue;
+        }
+
+        if (optionsPageUrl && tab.url.startsWith(optionsPageUrl)) {
+            if (readyForLogin) {
+                try {
+                    await browser.tabs.update(tab.id, {url: options.url});
+                } catch (e) {
+                    console.error('projektXD: promoting options tab failed:', e);
+                }
+            }
+        } else if (tab.url.startsWith(cfgOrigin)) {
+            try {
+                await browser.tabs.reload(tab.id);
+            } catch (e) {
+                console.error('projektXD: reloading origin tab failed:', e);
+            }
+        }
+    }
+}
+
+/**
+ * Handle a change to the stored options. Ordered so the bridge is registered
+ * for the (possibly new) origin *before* any tab is (re)loaded — otherwise the
+ * content script would not apply to those loads.
+ */
+async function applyConfigChange(): Promise<void> {
+    const options = await reloadConfig();
+    await refreshBridge();
+    await ensureSpace(options);
+    await reconcileTabsAfterConfig(options);
+}
+
 if (typeof browser === 'undefined') {
     console.error('projektXD::background: browser object is not defined!');
 } else {
@@ -509,7 +629,10 @@ if (typeof browser === 'undefined') {
     // @ts-ignore — runtime.getURL not typed in mozilla-webext-types
     optionsPageUrl = browser.runtime.getURL('chrome/content/ui/options.html');
 
-    void reloadConfig().then(ensureSpace);
+    void reloadConfig().then(async(options): Promise<void> => {
+        await ensureSpace(options);
+        await injectFaviconIntoOpenTabs();
+    });
 
     // -----------------------------------------------------------------------------------------------------------------
     // Tab lädt projektXD → Auto-Login (Ersatz für den früheren Toolbar-Klick).
@@ -547,6 +670,10 @@ if (typeof browser === 'undefined') {
         const options = await reloadConfig();
         void ensureSpace(options);
 
+        // Restored projektXD tabs loaded before the content scripts were
+        // registered — inject the favicon into them now (no reload).
+        void injectFaviconIntoOpenTabs();
+
         if (!options.autologin || !options.url) {
             return;
         }
@@ -578,7 +705,10 @@ if (typeof browser === 'undefined') {
     // @ts-ignore
     browser.runtime.onInstalled.addListener((): void => {
         void refreshBridge();
-        void reloadConfig().then(ensureSpace);
+        void reloadConfig().then(async(options): Promise<void> => {
+            await ensureSpace(options);
+            await injectFaviconIntoOpenTabs();
+        });
     });
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -587,8 +717,7 @@ if (typeof browser === 'undefined') {
     // @ts-ignore — storage.onChanged not typed in mozilla-webext-types
     browser.storage.onChanged.addListener((changes: any, area: string): void => {
         if (area === 'local' && changes && changes.projektxd) {
-            void refreshBridge();
-            void reloadConfig().then(ensureSpace);
+            void applyConfigChange();
         }
     });
 

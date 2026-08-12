@@ -25,6 +25,7 @@ module.exports = [
             'content/ui/options': './src/chrome/content/ui/options.ts',
             'content/scripts/login': './src/chrome/content/scripts/login.ts',
             'content/scripts/api': './src/chrome/content/scripts/api.ts',
+            'content/scripts/favicon': './src/chrome/content/scripts/favicon.ts',
         },
         experiments: {
             syncWebAssembly: true,
@@ -38,7 +39,13 @@ module.exports = [
         },
         module: {
             rules: [
-                ...tsLoaderRules
+                ...tsLoaderRules,
+                {
+                    // Inline SVG assets as their raw source string, so a content
+                    // script can turn one into a data: URI (used for the tab favicon).
+                    test: /\.svg$/,
+                    type: 'asset/source'
+                }
             ]
         },
         resolve: {

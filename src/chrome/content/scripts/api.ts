@@ -169,86 +169,6 @@ browser.runtime.onMessage.addListener((message: object): void => {
 });
 
 /**
- * Tab favicon for the projektXD instance: the actual extension resource
- * `chrome/content/images/projektXD-favicon.svg` (single source of truth — edit
- * that file to change the tab icon). It must be listed under
- * `web_accessible_resources` in the manifest so the page may load it.
- */
-// @ts-ignore — runtime.getURL not typed in mozilla-webext-types
-const FAVICON_HREF: string = browser.runtime.getURL('chrome/content/images/projektXD-favicon.svg');
-
-/** Marker attribute so we can tell our own favicon link apart. */
-const FAVICON_MARK = 'data-projektxd-favicon';
-
-/**
- * Replace whatever favicon the projektXD page ships with our own logo, so the
- * tab showing the projektXD instance carries the add-on's icon.
- */
-function setFavicon(): void {
-    const head = document.head;
-
-    if (!head) {
-        return;
-    }
-
-    head.querySelectorAll('link[rel~="icon"]').forEach((el: Element): void => el.remove());
-
-    const link = document.createElement('link');
-    link.rel = 'icon';
-    link.type = 'image/svg+xml';
-    link.href = FAVICON_HREF;
-    link.setAttribute(FAVICON_MARK, '1');
-    head.appendChild(link);
-}
-
-/**
- * Keep our favicon in place even if the (single-page) app swaps its own icon in
- * later: whenever a foreign icon link is added to <head>, re-assert ours.
- */
-function guardFavicon(): void {
-    if (!document.head) {
-        return;
-    }
-
-    const observer = new MutationObserver((mutations: MutationRecord[]): void => {
-        for (const mutation of mutations) {
-            for (const node of Array.from(mutation.addedNodes)) {
-                if (node instanceof HTMLLinkElement &&
-                    /(^|\s)icon(\s|$)/i.test(node.rel) &&
-                    !node.hasAttribute(FAVICON_MARK)) {
-                    setFavicon();
-                    return;
-                }
-            }
-        }
-    });
-
-    observer.observe(document.head, {childList: true});
-}
-
-/**
- * Install the favicon now (or as soon as <head> exists, since the bridge runs
- * at document_start) and keep it asserted afterwards.
- */
-function installFavicon(): void {
-    if (document.head) {
-        setFavicon();
-        guardFavicon();
-        return;
-    }
-
-    const waitForHead = new MutationObserver((): void => {
-        if (document.head) {
-            waitForHead.disconnect();
-            setFavicon();
-            guardFavicon();
-        }
-    });
-
-    waitForHead.observe(document.documentElement, {childList: true, subtree: true});
-}
-
-/**
  * Build the `window.projektxd_tb` object in the page compartment and attach it.
  */
 function installBridge(): void {
@@ -265,4 +185,3 @@ function installBridge(): void {
 }
 
 installBridge();
-installFavicon();
