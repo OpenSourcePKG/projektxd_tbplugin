@@ -4,6 +4,33 @@ All notable changes to the projektXD Thunderbird add-on are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.3.2] — 2026-08-14
+
+Requirements: Thunderbird **140 ESR** or newer · Manifest V3
+
+### Fixed
+
+- **Setting up the add-on no longer redirects you away from the settings page.**
+  Clicking **Activate** or flipping the **Sign in automatically** toggle used to
+  jump straight to the projektXD instance, because every saved change promoted
+  the open options tab to the instance URL. That promotion is gone — the
+  settings page now stays put while you configure it. (#5)
+- **The spaces-toolbar icon opens projektXD instead of the settings page — no
+  Thunderbird restart required.** The spaces button owns a single tab and
+  *switches to* it on click, so the first (unconfigured) click made the settings
+  page "sticky". The button is now kept in sync with the configured instance URL
+  as soon as setup is complete, so closing the settings page and clicking the
+  icon opens the projektXD instance right away. (#5)
+
+### Changed
+
+- **The separate "Activate" button is no longer needed for the normal setup
+  flow.** Turning on **Sign in automatically** now requests the required host
+  access to the projektXD URL directly, inside that click; the **Activate**
+  button remains as a manual fallback. On Manifest V3 host access is an
+  *optional* permission that Thunderbird must grant via a prompt — it cannot be
+  granted silently, so a one-time confirmation still appears.
+
 ## [2.2.1] — 2026-08-10
 
 Requirements: Thunderbird **140 ESR** or newer · Manifest V3
