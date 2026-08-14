@@ -546,20 +546,15 @@ async function handleTicketFromEmail(tab: any): Promise<void> {
 }
 
 /**
- * After the options changed, bring already-open tabs in line with the new
- * configuration without requiring a Thunderbird restart:
+ * After the options changed, reload any tab already on the projektXD origin so
+ * the freshly (re-)registered bridge content script runs there. This is what
+ * makes the tab favicon and the page API appear immediately instead of only
+ * after a restart.
  *
- *  - Any tab already on the projektXD origin is reloaded, so the freshly
- *    (re-)registered bridge content script runs there. This is what makes the
- *    tab favicon and the page API appear immediately instead of only after a
- *    restart.
- *  - The spaces button's options tab is sent straight to the instance once the
- *    add-on is fully configured for silent login (url + username + password +
- *    autologin). That logs the user in and turns the spaces tab into the
- *    instance tab, so clicking the spaces button no longer re-opens settings.
- *    The gate avoids navigating away while the form is still being filled —
- *    fields only save on blur, so all four are present only once the user is
- *    done.
+ * The spaces button itself is kept in sync separately by `ensureSpace`
+ * (`spaces.update`), so once an instance URL is configured a later click on the
+ * button opens projektXD rather than the settings page — no tab of the user's
+ * is redirected here.
  *
  * @param {ProjektXDOptions} options
  */
@@ -567,8 +562,6 @@ async function reconcileTabsAfterConfig(options: ProjektXDOptions): Promise<void
     if (!options.url || !cfgOrigin) {
         return;
     }
-
-    const readyForLogin = Boolean(options.autologin && options.username && options.password);
 
     let tabs: any[];
 
@@ -584,15 +577,7 @@ async function reconcileTabsAfterConfig(options: ProjektXDOptions): Promise<void
             continue;
         }
 
-        if (optionsPageUrl && tab.url.startsWith(optionsPageUrl)) {
-            if (readyForLogin) {
-                try {
-                    await browser.tabs.update(tab.id, {url: options.url});
-                } catch (e) {
-                    console.error('projektXD: promoting options tab failed:', e);
-                }
-            }
-        } else if (tab.url.startsWith(cfgOrigin)) {
+        if (tab.url.startsWith(cfgOrigin)) {
             try {
                 await browser.tabs.reload(tab.id);
             } catch (e) {

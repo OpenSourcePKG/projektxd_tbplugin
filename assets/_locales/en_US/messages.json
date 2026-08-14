@@ -68,6 +68,12 @@
   "toastInvalidUrlBody": {
     "message": "Please enter the full address including https://."
   },
+  "toastPermissionDeniedTitle": {
+    "message": "Access not granted"
+  },
+  "toastPermissionDeniedBody": {
+    "message": "Automatic sign-in needs access to the projektXD URL."
+  },
   "messageActionTitle": {
     "message": "Create projektXD ticket"
   },

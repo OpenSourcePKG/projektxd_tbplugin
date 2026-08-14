@@ -68,6 +68,12 @@
   "toastInvalidUrlBody": {
     "message": "Bitte die vollständige Adresse inkl. https:// eintragen."
   },
+  "toastPermissionDeniedTitle": {
+    "message": "Zugriff nicht erteilt"
+  },
+  "toastPermissionDeniedBody": {
+    "message": "Für die automatische Anmeldung wird Zugriff auf die projektXD-URL benötigt."
+  },
   "messageActionTitle": {
     "message": "Als projektXD-Ticket"
   },

@@ -96,7 +96,9 @@ export class Options {
         const inputUrl = Options.getElm('url', onChange);
         const inputUsername = Options.getElm('username', onChange);
         const inputPassword = Options.getElm('password', onChange);
-        const inputAutoLogin = Options.getElm('autologin', onChange);
+        // Auto-Login gets its own handler (below): turning it on also requests
+        // the host permission, so the separate "Activate" button is not needed.
+        const inputAutoLogin = Options.getElm('autologin');
 
         inputUrl.value = options.url;
         inputUsername.value = options.username;
@@ -198,6 +200,48 @@ export class Options {
 
             flashSaved();
         };
+
+        // auto-login toggle -------------------------------------------------------------------------------------------
+        // Silent sign-in needs host access to the projektXD URL. Request it right
+        // here, inside the toggle's user gesture — permissions.request MUST run
+        // synchronously before any await, otherwise Thunderbird drops the gesture
+        // and rejects. This makes the separate "Activate" button unnecessary in
+        // the normal setup flow (it stays as a manual fallback).
+        inputAutoLogin.addEventListener('change', () => {
+            if (!inputAutoLogin.checked) {
+                if (onSave) {
+                    void onSave();
+                }
+                return;
+            }
+
+            const requestPromise = browser.permissions.request({origins: [HOST_PATTERN]});
+
+            requestPromise.then(async(granted) => {
+                console.log('projektXD::Options: autologin permission.request →', granted);
+
+                if (!granted) {
+                    // Without host access auto-login cannot work — revert the toggle.
+                    inputAutoLogin.checked = false;
+                    Toast.show({
+                        type: 'error',
+                        title: browser.i18n.getMessage('toastPermissionDeniedTitle'),
+                        message: browser.i18n.getMessage('toastPermissionDeniedBody')
+                    });
+                }
+
+                if (onSave) {
+                    await onSave();
+                }
+
+                await refreshStatus();
+            }).catch((e) => {
+                console.error('projektXD::Options: autologin permission request failed', e);
+                if (onSave) {
+                    void onSave();
+                }
+            });
+        });
     }
 
 }
