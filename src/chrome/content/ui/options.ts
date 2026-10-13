@@ -8,7 +8,22 @@ declare const browser: ThunderbirdBrowser;
 type onChangeOptionEvent = (event: Event) => void;
 type onSaveOptionEvent = () => void;
 
-const HOST_PATTERN = '<all_urls>';
+/**
+ * The host match pattern the add-on needs for a given instance URL — only the
+ * configured origin, e.g. "https://portal.example.com/*". Requesting exactly
+ * this (instead of <all_urls>) keeps the granted host access scoped to the one
+ * instance the user configured. Returns null for an empty/invalid URL.
+ *
+ * @param {string} url
+ * @returns {string | null}
+ */
+function hostPattern(url: string): string | null {
+    try {
+        return `${new URL(url).origin}/*`;
+    } catch (_e) {
+        return null;
+    }
+}
 
 function isValidProjektXDUrl(url: string): boolean {
     if (!url) {
@@ -129,12 +144,15 @@ export class Options {
         const statusMissing = document.querySelector('#permission-status [data-status="missing"]') as HTMLElement | null;
 
         const refreshStatus = async(): Promise<void> => {
+            const pattern = hostPattern(inputUrl.value.trim());
             let granted = false;
 
-            try {
-                granted = await browser.permissions.contains({origins: [HOST_PATTERN]});
-            } catch (e) {
-                console.error('projektXD::Options: permissions.contains failed', e);
+            if (pattern) {
+                try {
+                    granted = await browser.permissions.contains({origins: [pattern]});
+                } catch (e) {
+                    console.error('projektXD::Options: permissions.contains failed', e);
+                }
             }
 
             if (statusOk) {
@@ -155,7 +173,18 @@ export class Options {
             grantBtn.addEventListener('click', () => {
                 // permissions.request MUSS synchron im User-Gesture-Handler aufgerufen werden —
                 // jedes vorhergehende await bricht den Gesture-Kontext und Thunderbird lehnt ab.
-                const requestPromise = browser.permissions.request({origins: [HOST_PATTERN]});
+                const pattern = hostPattern(inputUrl.value.trim());
+
+                if (!pattern) {
+                    Toast.show({
+                        type: 'error',
+                        title: browser.i18n.getMessage('toastInvalidUrlTitle'),
+                        message: browser.i18n.getMessage('toastInvalidUrlBody')
+                    });
+                    return;
+                }
+
+                const requestPromise = browser.permissions.request({origins: [pattern]});
 
                 requestPromise.then(async(granted) => {
                     console.log('projektXD::Options: permissions.request →', granted);
@@ -174,6 +203,12 @@ export class Options {
         }
 
         void refreshStatus();
+
+        // The host grant is scoped to the configured origin, so re-check it
+        // whenever the URL changes (a new host is "missing" until granted).
+        inputUrl.addEventListener('change', () => {
+            void refreshStatus();
+        });
 
         // save --------------------------------------------------------------------------------------------------------
         onSave = async(): Promise<void> => {
@@ -216,7 +251,20 @@ export class Options {
                 return;
             }
 
-            const requestPromise = browser.permissions.request({origins: [HOST_PATTERN]});
+            const pattern = hostPattern(inputUrl.value.trim());
+
+            if (!pattern) {
+                // No valid https URL yet — cannot scope a host grant; revert.
+                inputAutoLogin.checked = false;
+                Toast.show({
+                    type: 'error',
+                    title: browser.i18n.getMessage('toastInvalidUrlTitle'),
+                    message: browser.i18n.getMessage('toastInvalidUrlBody')
+                });
+                return;
+            }
+
+            const requestPromise = browser.permissions.request({origins: [pattern]});
 
             requestPromise.then(async(granted) => {
                 console.log('projektXD::Options: autologin permission.request →', granted);
