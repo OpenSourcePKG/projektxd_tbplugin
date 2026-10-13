@@ -2,7 +2,7 @@ version: '3.1'
 
 services:
   thunderbird:
-    image: thunderbird_projektxd_addon_140_11_1esr
+    image: thunderbird_projektxd_addon_153_4_0esr
     build:
       context: ./thunderbird/
       dockerfile: Dockerfile

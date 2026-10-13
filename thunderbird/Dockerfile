@@ -6,9 +6,9 @@ RUN go mod init build && \
     go get github.com/geek1011/easy-novnc@v1.1.0 && \
     go build -o /bin/easy-novnc github.com/geek1011/easy-novnc
 
-FROM debian:11
+FROM debian:12
 
-ARG TB_URL="https://download-installer.cdn.mozilla.net/pub/thunderbird/releases/140.11.1esr/linux-x86_64/de/thunderbird-140.11.1esr.tar.xz"
+ARG TB_URL="https://download-installer.cdn.mozilla.net/pub/thunderbird/releases/153.4.0esr/linux-x86_64/de/thunderbird-153.4.0esr.tar.xz"
 
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends openbox tigervnc-standalone-server supervisor gosu && \

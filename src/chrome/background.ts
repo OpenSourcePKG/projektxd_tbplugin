@@ -326,17 +326,27 @@ async function reloadConfig(): Promise<ProjektXDOptions> {
 
 /**
  * Create — or update — the projektXD entry in Thunderbird's spaces toolbar
- * (the vertical app bar on the left, next to Mail/Contacts/Calendar). Clicking
- * it opens the configured projektXD instance in a tab; the auto-login is then
- * triggered by `onTabUpdated` once that tab has loaded. Falls back to the
- * options page while no instance URL is configured yet.
+ * (the vertical app bar on the left, next to Mail/Contacts/Calendar).
  *
- * @param {ProjektXDOptions} options
+ * The button points at a FIXED in-extension launcher page (`launcher.html`),
+ * which decides at click time whether to open the configured projektXD instance
+ * or the settings page (see `launcher.ts`). The space URL deliberately never
+ * changes after creation: a space owns a single tab and `spaces.update(url)`
+ * navigates that tab, so switching the URL to the instance on every stored edit
+ * would redirect the very options tab the user is still configuring — the
+ * long-standing "settings page jumps to projektXD" bug. Routing in the launcher
+ * instead keeps the space URL constant, so routine updates touch only the
+ * button title/icon and never move the user's tab.
+ *
+ * @param {{updateUrl?: boolean}} [opts] When `updateUrl` is true the launcher
+ *   URL is (re-)applied to an existing space. This is only needed once, on
+ *   install/update, to migrate spaces created by older versions (which pointed
+ *   straight at the options/instance URL) onto the launcher. Left false for
+ *   routine updates so the open space tab is never navigated.
  */
-async function ensureSpace(options: ProjektXDOptions): Promise<void> {
+async function ensureSpace({updateUrl = false}: {updateUrl?: boolean} = {}): Promise<void> {
     // @ts-ignore — runtime.getURL not typed in mozilla-webext-types
-    const optionsUrl: string = browser.runtime.getURL('chrome/content/ui/options.html');
-    const defaultUrl = options.url && originFromUrl(options.url) ? options.url : optionsUrl;
+    const launcherUrl: string = browser.runtime.getURL('chrome/content/ui/launcher.html');
 
     const buttonProperties = {
         title: browser.i18n.getMessage('extensionName'),
@@ -347,9 +357,11 @@ async function ensureSpace(options: ProjektXDOptions): Promise<void> {
         const existing = await browser.spaces.query({name: SPACE_NAME});
 
         if (existing && existing.length > 0) {
-            await browser.spaces.update(SPACE_NAME, defaultUrl, buttonProperties);
+            // Pass undefined to keep the existing (launcher) URL — see the JSDoc:
+            // supplying a URL here would navigate the space's open tab.
+            await browser.spaces.update(SPACE_NAME, updateUrl ? launcherUrl : undefined, buttonProperties);
         } else {
-            await browser.spaces.create(SPACE_NAME, defaultUrl, buttonProperties);
+            await browser.spaces.create(SPACE_NAME, launcherUrl, buttonProperties);
         }
     } catch (e) {
         console.error('projektXD: ensureSpace failed:', e);
@@ -551,10 +563,9 @@ async function handleTicketFromEmail(tab: any): Promise<void> {
  * makes the tab favicon and the page API appear immediately instead of only
  * after a restart.
  *
- * The spaces button itself is kept in sync separately by `ensureSpace`
- * (`spaces.update`), so once an instance URL is configured a later click on the
- * button opens projektXD rather than the settings page — no tab of the user's
- * is redirected here.
+ * The spaces button is not touched here: it points at the fixed launcher page
+ * (see `ensureSpace` / `launcher.ts`), which routes a later click to projektXD
+ * or the settings page on its own — so no tab of the user's is redirected here.
  *
  * @param {ProjektXDOptions} options
  */
@@ -595,7 +606,7 @@ async function reconcileTabsAfterConfig(options: ProjektXDOptions): Promise<void
 async function applyConfigChange(): Promise<void> {
     const options = await reloadConfig();
     await refreshBridge();
-    await ensureSpace(options);
+    await ensureSpace();
     await reconcileTabsAfterConfig(options);
 }
 
@@ -614,8 +625,8 @@ if (typeof browser === 'undefined') {
     // @ts-ignore — runtime.getURL not typed in mozilla-webext-types
     optionsPageUrl = browser.runtime.getURL('chrome/content/ui/options.html');
 
-    void reloadConfig().then(async(options): Promise<void> => {
-        await ensureSpace(options);
+    void reloadConfig().then(async(): Promise<void> => {
+        await ensureSpace();
         await injectFaviconIntoOpenTabs();
     });
 
@@ -653,7 +664,11 @@ if (typeof browser === 'undefined') {
         void refreshBridge();
 
         const options = await reloadConfig();
-        void ensureSpace(options);
+        // Startup is a safe moment to (re-)apply the launcher URL, so spaces
+        // created by older versions get migrated even when onInstalled did not
+        // fire (e.g. a same-version redeploy). Unlike the top-level init, this
+        // runs only on an actual Thunderbird start, never on event-page respawn.
+        void ensureSpace({updateUrl: true});
 
         // Restored projektXD tabs loaded before the content scripts were
         // registered — inject the favicon into them now (no reload).
@@ -690,8 +705,10 @@ if (typeof browser === 'undefined') {
     // @ts-ignore
     browser.runtime.onInstalled.addListener((): void => {
         void refreshBridge();
-        void reloadConfig().then(async(options): Promise<void> => {
-            await ensureSpace(options);
+        void reloadConfig().then(async(): Promise<void> => {
+            // On install/update, migrate spaces created by older versions (which
+            // pointed straight at the options/instance URL) onto the launcher.
+            await ensureSpace({updateUrl: true});
             await injectFaviconIntoOpenTabs();
         });
     });
