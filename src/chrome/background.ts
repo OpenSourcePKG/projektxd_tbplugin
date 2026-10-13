@@ -558,21 +558,32 @@ async function handleTicketFromEmail(tab: any): Promise<void> {
 }
 
 /**
- * After the options changed, reload any tab already on the projektXD origin so
- * the freshly (re-)registered bridge content script runs there. This is what
- * makes the tab favicon and the page API appear immediately instead of only
- * after a restart.
+ * After the options changed, bring already-open tabs in line with the new
+ * configuration without requiring a Thunderbird restart:
  *
- * The spaces button is not touched here: it points at the fixed launcher page
- * (see `ensureSpace` / `launcher.ts`), which routes a later click to projektXD
- * or the settings page on its own — so no tab of the user's is redirected here.
+ *  - Tabs already on the (new) projektXD origin are reloaded, so the freshly
+ *    (re-)registered bridge content script runs there. This is what makes the
+ *    tab favicon and the page API appear immediately instead of only after a
+ *    restart.
+ *  - When the URL (origin) changed, tabs still sitting on the *previous*
+ *    projektXD origin are navigated to the new URL. A spaces button switches to
+ *    its existing owned tab instead of re-running the launcher, so without this
+ *    a projektXD tab left open on the old URL would keep showing it until the
+ *    tab is closed or Thunderbird is restarted (issue #6).
+ *
+ * The spaces button itself is not touched here: it points at the fixed launcher
+ * page (see `ensureSpace` / `launcher.ts`), which already reads the current URL
+ * on every fresh open.
  *
  * @param {ProjektXDOptions} options
+ * @param {string | null} prevOrigin the origin configured before this change
  */
-async function reconcileTabsAfterConfig(options: ProjektXDOptions): Promise<void> {
+async function reconcileTabsAfterConfig(options: ProjektXDOptions, prevOrigin: string | null): Promise<void> {
     if (!options.url || !cfgOrigin) {
         return;
     }
+
+    const originChanged = Boolean(prevOrigin && prevOrigin !== cfgOrigin);
 
     let tabs: any[];
 
@@ -594,6 +605,12 @@ async function reconcileTabsAfterConfig(options: ProjektXDOptions): Promise<void
             } catch (e) {
                 console.error('projektXD: reloading origin tab failed:', e);
             }
+        } else if (originChanged && prevOrigin && tab.url.startsWith(prevOrigin)) {
+            try {
+                await browser.tabs.update(tab.id, {url: options.url});
+            } catch (e) {
+                console.error('projektXD: moving tab to new URL failed:', e);
+            }
         }
     }
 }
@@ -602,12 +619,18 @@ async function reconcileTabsAfterConfig(options: ProjektXDOptions): Promise<void
  * Handle a change to the stored options. Ordered so the bridge is registered
  * for the (possibly new) origin *before* any tab is (re)loaded — otherwise the
  * content script would not apply to those loads.
+ *
+ * @param {string | null} prevOrigin the origin configured before this change,
+ *   taken from the storage event's `oldValue`. It must come from there rather
+ *   than from the in-memory `cfgOrigin` cache: the MV3 background is a
+ *   non-persistent event page, so that cache may have been reset to its initial
+ *   value (or already re-read as the new config) by the time this runs.
  */
-async function applyConfigChange(): Promise<void> {
+async function applyConfigChange(prevOrigin: string | null): Promise<void> {
     const options = await reloadConfig();
     await refreshBridge();
     await ensureSpace();
-    await reconcileTabsAfterConfig(options);
+    await reconcileTabsAfterConfig(options, prevOrigin);
 }
 
 if (typeof browser === 'undefined') {
@@ -719,7 +742,9 @@ if (typeof browser === 'undefined') {
     // @ts-ignore — storage.onChanged not typed in mozilla-webext-types
     browser.storage.onChanged.addListener((changes: any, area: string): void => {
         if (area === 'local' && changes && changes.projektxd) {
-            void applyConfigChange();
+            const oldValue = changes.projektxd.oldValue as ProjektXDOptions | undefined;
+            const prevOrigin = oldValue && oldValue.url ? originFromUrl(oldValue.url) : null;
+            void applyConfigChange(prevOrigin);
         }
     });
 
