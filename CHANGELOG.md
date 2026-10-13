@@ -4,6 +4,47 @@ All notable changes to the projektXD Thunderbird add-on are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.3.3] — 2026-10-13
+
+Requirements: Thunderbird **140 ESR or newer** (now also compatible with **153
+ESR**) · Manifest V3
+
+### Fixed
+
+- **Configuring the add-on no longer redirects the settings page to projektXD.**
+  A follow-up to 2.3.2: the spaces-toolbar button owns a single tab, and
+  updating that button's URL on every saved change navigated the very settings
+  tab you were filling in. The button now points at a fixed internal launcher
+  that decides — at click time — whether to open the configured instance or the
+  settings page, so clicking **Activate** or flipping **Sign in automatically**
+  no longer jumps away.
+- **Changing the instance URL now takes effect without restarting Thunderbird.**
+  A projektXD tab left open on the old address is moved to the new URL as soon as
+  you save, and the spaces icon always opens the current URL.
+
+### Security
+
+- **The instance URL must now be `https://`.** Credentials and session data are
+  never sent over an unencrypted connection: `http://` (and `ws://`/`ftp://`)
+  addresses are rejected in the settings, and the add-on refuses to contact a
+  non-https endpoint even if one was stored by an older version.
+
+### Changed
+
+- **Compatible with Thunderbird 153 ESR.** The supported range is now
+  Thunderbird 140 ESR through 153 ESR.
+- **Host access is requested only for the instance you configure, on demand.**
+  Instead of broad access to all websites granted at install, the add-on now
+  declares host access as an *optional* permission and asks only for your
+  configured projektXD host (e.g. `https://portal.example.com/*`) when you turn
+  on sign-in. The install-time permission prompt is correspondingly smaller.
+
+### Removed
+
+- **Trimmed the package.** Dropped the unused `activeTab` permission and three
+  unused image files, keeping the add-on's permissions and download size to the
+  minimum it actually needs.
+
 ## [2.3.2] — 2026-08-14
 
 Requirements: Thunderbird **140 ESR** or newer · Manifest V3
