@@ -4,15 +4,16 @@ import {ThunderbirdBrowser} from 'mozilla-webext-types';
 declare const browser: ThunderbirdBrowser;
 
 /**
- * Whether a stored instance URL is a usable http(s) target.
+ * Whether a stored instance URL is a usable, secure (https) target. Only https
+ * is accepted — never http/ws/ftp — so the instance is never opened over an
+ * unencrypted channel; an insecure URL falls back to the settings page.
  *
  * @param {string} url
  * @returns {boolean}
  */
-function isHttpUrl(url: string): boolean {
+function isHttpsUrl(url: string): boolean {
     try {
-        const parsed = new URL(url);
-        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+        return new URL(url).protocol === 'https:';
     } catch (_e) {
         return false;
     }
@@ -42,7 +43,7 @@ async function route(): Promise<void> {
     try {
         const options = await new Settings().get();
 
-        if (options.url && isHttpUrl(options.url)) {
+        if (options.url && isHttpsUrl(options.url)) {
             target = options.url;
         }
     } catch (e) {

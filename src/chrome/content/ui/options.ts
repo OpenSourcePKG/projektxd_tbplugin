@@ -15,8 +15,9 @@ function isValidProjektXDUrl(url: string): boolean {
         return true;
     }
     try {
-        const parsed = new URL(url);
-        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+        // Only https — never http/ws/ftp — so credentials and session data
+        // never travel over an unencrypted channel.
+        return new URL(url).protocol === 'https:';
     } catch (_e) {
         return false;
     }

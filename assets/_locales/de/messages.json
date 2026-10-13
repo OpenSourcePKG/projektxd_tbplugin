@@ -66,7 +66,7 @@
     "message": "Ungültige URL"
   },
   "toastInvalidUrlBody": {
-    "message": "Bitte die vollständige Adresse inkl. https:// eintragen."
+    "message": "Die Adresse muss mit https:// beginnen – http:// ist nicht erlaubt."
   },
   "toastPermissionDeniedTitle": {
     "message": "Zugriff nicht erteilt"

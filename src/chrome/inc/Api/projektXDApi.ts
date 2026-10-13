@@ -25,8 +25,30 @@ export class ProjektXDApi {
         'Accept': 'application/json'
     };
 
+    /**
+     * Whether an endpoint is safe to send session cookies / credentials to.
+     * Only `https:` is accepted — never http/ws/ftp — so no data ever travels
+     * over an unencrypted channel, even if an insecure URL slipped into storage
+     * (e.g. from an older build that still allowed http).
+     *
+     * @param {string} endpoint
+     * @returns {boolean}
+     */
+    private static isSecureEndpoint(endpoint: string): boolean {
+        try {
+            return new URL(endpoint).protocol === 'https:';
+        } catch (_e) {
+            return false;
+        }
+    }
+
     public static async loadInit(url: string): Promise<boolean | null> {
         const endpoint = JoinUrl.joinUrl(url, 'backend/main/Init');
+
+        if (!ProjektXDApi.isSecureEndpoint(endpoint)) {
+            console.error(`ProjektXDApi.loadInit: refusing an insecure (non-https) endpoint: ${endpoint}`);
+            return null;
+        }
 
         try {
             const response = await fetch(endpoint, {
@@ -71,6 +93,11 @@ export class ProjektXDApi {
 
     public static async login(url: string, username: string, password: string): Promise<boolean> {
         const endpoint = JoinUrl.joinUrl(url, 'backend/main/Login');
+
+        if (!ProjektXDApi.isSecureEndpoint(endpoint)) {
+            console.error(`ProjektXDApi.login: refusing to send credentials over an insecure (non-https) endpoint: ${endpoint}`);
+            return false;
+        }
 
         try {
             const body: ProjektXDApiLoginRequest = {
